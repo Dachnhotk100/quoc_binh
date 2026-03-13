@@ -580,3 +580,306 @@ barplot(table(mtcars$cyl),
 
 # Reset layout
 layout(1)
+
+
+# ------------------------------------------------------------------------------
+# 9.9 Tùy chỉnh nâng cao
+# ------------------------------------------------------------------------------
+
+# 9.9.1 Màu sắc trong R
+
+# Màu cơ bản
+colors_basic <- c("red", "blue", "green", "yellow", "orange", 
+                  "purple", "pink", "brown", "gray", "black")
+
+# Xem tất cả màu có sẵn
+colors()  # Hơn 600 màu
+
+# Một số bảng màu phổ biến
+par(mfrow = c(2, 2))
+
+barplot(1:5, col = rainbow(5), main = "Rainbow")
+barplot(1:5, col = heat.colors(5), main = "Heat Colors")
+barplot(1:5, col = terrain.colors(5), main = "Terrain Colors")
+barplot(1:5, col = topo.colors(5), main = "Topo Colors")
+
+par(mfrow = c(1, 1))
+
+# 9.9.2 Thêm văn bản và chú thích
+
+plot(mtcars$wt, mtcars$mpg,
+     main = "MPG vs Weight",
+     xlab = "Weight (1000 lbs)",
+     ylab = "MPG",
+     pch = 19,
+     col = "blue")
+
+# Thêm text tại vị trí cụ thể
+text(x = 5, y = 30, 
+     labels = "Xe nặng\ntiêu tốn nhiều xăng",
+     col = "red")
+
+# Thêm mũi tên chỉ điểm
+arrows(x0 = 4.8, y0 = 28,   # Điểm bắt đầu
+       x1 = 5.3, y1 = 15,   # Điểm kết thúc
+       col = "red",
+       lwd = 2)
+
+# 9.9.3 Thêm lưới (grid)
+
+plot(mtcars$wt, mtcars$mpg,
+     main = "MPG vs Weight (có lưới)",
+     xlab = "Weight",
+     ylab = "MPG",
+     pch = 19,
+     col = "blue")
+
+# Thêm lưới
+grid(col = "gray", lty = "dotted")
+
+# 9.9.4 Tùy chỉnh trục
+
+plot(mtcars$wt, mtcars$mpg,
+     main = "MPG vs Weight",
+     xlab = "Weight (1000 lbs)",
+     ylab = "Miles per Gallon",
+     pch = 19,
+     col = "blue",
+     xlim = c(0, 6),      # Giới hạn trục x
+     ylim = c(0, 40),     # Giới hạn trục y
+     las = 1)             # Xoay nhãn trục y
+
+# 9.9.5 Lưu biểu đồ ra file
+
+# Lưu dưới dạng PNG
+png("D:/Github/R_Intro/labs/lab_02/my_plot.png", width = 800, height = 600)
+plot(mtcars$wt, mtcars$mpg,
+     main = "MPG vs Weight",
+     pch = 19,
+     col = "blue")
+dev.off()  # Đóng file
+
+# Lưu dưới dạng PDF
+pdf("my_plot.pdf", width = 7, height = 5)
+plot(mtcars$wt, mtcars$mpg,
+     main = "MPG vs Weight",
+     pch = 19,
+     col = "blue")
+dev.off()
+
+# Lưu dưới dạng JPEG
+jpeg("my_plot.jpg", width = 800, height = 600, quality = 100)
+plot(mtcars$wt, mtcars$mpg,
+     main = "MPG vs Weight",
+     pch = 19,
+     col = "blue")
+dev.off()
+
+# ------------------------------------------------------------------------------
+# 9.10 Lựa chọn biểu đồ phù hợp
+# ------------------------------------------------------------------------------
+
+# HƯỚNG DẪN CHỌN BIỂU ĐỒ:
+
+# 1. Dữ liệu PHÂN LOẠI (categorical):
+#    - Một biến: Bar Chart hoặc Pie Chart
+#    - Hai biến: Grouped Bar Chart hoặc Stacked Bar Chart
+
+# 2. Dữ liệu LIÊN TỤC (continuous):
+#    - Phân phối một biến: Histogram hoặc Box Plot
+#    - So sánh nhiều nhóm: Box Plot
+#    - Mối quan hệ hai biến: Scatter Plot
+#    - Xu hướng theo thời gian: Line Plot
+
+# 3. KẾT HỢP:
+#    - Scatter Plot + Line (xu hướng)
+#    - Histogram + Density curve
+
+# Ví dụ minh họa
+
+# Tạo dữ liệu mẫu
+set.seed(123)
+category <- sample(c("A", "B", "C"), 100, replace = TRUE)
+continuous <- rnorm(100, 50, 10)
+time_series <- cumsum(rnorm(50, 0, 5))
+
+par(mfrow = c(2, 2))
+
+# 1. Categorical: Bar Chart
+barplot(table(category),
+        main = "Phân loại - Bar Chart",
+        col = rainbow(3))
+
+# 2. Continuous: Histogram
+hist(continuous,
+     main = "Liên tục - Histogram",
+     col = "lightblue")
+
+# 3. Categorical + Continuous: Boxplot
+boxplot(continuous ~ category,
+        main = "So sánh nhóm - Boxplot",
+        col = rainbow(3))
+
+# 4. Time series: Line Plot
+plot(time_series,
+     type = "l",
+     main = "Chuỗi thời gian - Line",
+     col = "blue",
+     lwd = 2)
+
+par(mfrow = c(1, 1))
+
+# ==============================================================================
+# BÀI TẬP THỰC HÀNH
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Bài tập 1: Bar Chart
+# ------------------------------------------------------------------------------
+
+# Sử dụng dữ liệu sau:
+subjects <- c("Toán", "Lý", "Hóa", "Văn", "Anh")
+scores <- c(8, 7.5, 9, 8.5, 7)
+
+# Yêu cầu:
+# 1. Vẽ bar chart cơ bản
+# 2. Thêm tiêu đề "Điểm thi của bạn"
+# 3. Tô màu khác nhau cho mỗi môn
+# 4. Thêm giá trị điểm lên đầu mỗi cột
+# 5. Vẽ bar chart ngang
+
+# ------------------------------------------------------------------------------
+# Bài tập 2: Histogram
+# ------------------------------------------------------------------------------
+
+# Tạo dữ liệu: Điểm thi của 100 sinh viên
+set.seed(2024)
+exam_scores <- rnorm(100, mean = 70, sd = 10)
+
+# Yêu cầu:
+# 1. Vẽ histogram với 10 bins
+# 2. Thêm tiêu đề và nhãn trục phù hợp
+# 3. Tô màu xanh lam
+# 4. Thêm đường thẳng đứng màu đỏ tại vị trí điểm trung bình
+# 5. Vẽ histogram khác với 20 bins, so sánh sự khác biệt
+
+# ------------------------------------------------------------------------------
+# Bài tập 3: Box Plot
+# ------------------------------------------------------------------------------
+
+# Sử dụng dữ liệu iris
+
+# Yêu cầu:
+# 1. Vẽ box plot so sánh Petal.Length giữa 3 loài
+# 2. Tô màu khác nhau cho mỗi loài
+# 3. Thêm tiêu đề phù hợp
+# 4. Nhìn vào biểu đồ và trả lời:
+#    - Loài nào có petal dài nhất?
+#    - Loài nào có độ biến thiên lớn nhất?
+#    - Có outliers không? Ở loài nào?
+
+# ------------------------------------------------------------------------------
+# Bài tập 4: Scatter Plot
+# ------------------------------------------------------------------------------
+
+# Sử dụng dữ liệu mtcars
+
+# Yêu cầu:
+# 1. Vẽ scatter plot giữa hp (horsepower) và mpg
+# 2. Tô màu các điểm theo số cy-lanh (cyl)
+# 3. Thêm đường hồi quy tuyến tính
+# 4. Thêm legend giải thích màu
+# 5. Nhận xét về mối quan hệ giữa hp và mpg
+
+# ------------------------------------------------------------------------------
+# Bài tập 5: Nhiều biểu đồ
+# ------------------------------------------------------------------------------
+
+# Sử dụng dữ liệu mtcars
+
+# Yêu cầu:
+# Tạo một figure với 4 biểu đồ (2x2) để phân tích biến hp:
+# 1. Histogram của hp
+# 2. Box plot của hp
+# 3. Box plot so sánh hp theo cyl
+# 4. Scatter plot hp vs mpg
+
+# ------------------------------------------------------------------------------
+# Bài tập 6: Tổng hợp
+# ------------------------------------------------------------------------------
+
+# Tạo dữ liệu bán hàng của 4 quý
+Q1 <- c(100, 120, 110, 130)
+Q2 <- c(150, 140, 160, 155)
+Q3 <- c(180, 170, 190, 185)
+Q4 <- c(200, 210, 195, 220)
+products <- c("Sản phẩm A", "Sản phẩm B", "Sản phẩm C", "Sản phẩm D")
+
+# Yêu cầu:
+# 1. Vẽ grouped bar chart so sánh doanh thu 4 quý
+# 2. Vẽ line plot cho từng sản phẩm qua 4 quý
+# 3. Tính tổng doanh thu mỗi quý, vẽ bar chart
+# 4. Tạo figure 2x2 hiển thị:
+#    - Grouped bar chart
+#    - Line plot tất cả sản phẩm
+#    - Pie chart tổng doanh thu mỗi quý
+#    - Bar chart tổng doanh thu mỗi sản phẩm
+
+# ==============================================================================
+# TÀI LIỆU THAM KHẢO
+# ==============================================================================
+
+# 1. R Graphics Cookbook: https://r-graphics.org/
+# 2. Quick-R Graphics: https://www.statmethods.net/graphs/
+# 3. R Documentation: ?plot, ?hist, ?boxplot, ?barplot
+# 4. R Color Chart: http://www.stat.columbia.edu/~tzheng/files/Rcolor.pdf
+
+# ==============================================================================
+# TỔNG KẾT
+# ==============================================================================
+
+# Những điểm cần nhớ:
+
+# 1. ✅ Chọn biểu đồ phù hợp với loại dữ liệu:
+#    - Bar chart: Dữ liệu phân loại
+#    - Histogram: Phân phối dữ liệu liên tục
+#    - Box plot: So sánh nhóm, tìm outliers
+#    - Scatter plot: Mối quan hệ giữa 2 biến
+#    - Line plot: Xu hướng theo thời gian
+#    - Pie chart: Tỷ lệ phần trăm (ít nhóm)
+
+# 2. ✅ Luôn thêm tiêu đề và nhãn trục rõ ràng
+
+# 3. ✅ Sử dụng màu sắc hợp lý:
+#    - Không quá nhiều màu
+#    - Màu có ý nghĩa (đỏ = cảnh báo, xanh lá = tốt)
+#    - Đảm bảo đọc được khi in đen trắng
+
+# 4. ✅ Box plot giúp:
+#    - Thấy trung vị, Q1, Q3
+#    - Phát hiện outliers
+#    - So sánh nhiều nhóm
+
+# 5. ✅ Histogram vs Bar chart:
+#    - Histogram: Dữ liệu liên tục, không có khoảng cách giữa cột
+#    - Bar chart: Dữ liệu phân loại, có khoảng cách
+
+# 6. ✅ Sử dụng par(mfrow) để vẽ nhiều biểu đồ cùng lúc
+
+# 7. ✅ Lưu biểu đồ: png(), pdf(), jpeg() + dev.off()
+
+# Quy trình vẽ biểu đồ tốt:
+# 1. Xác định mục đích: Muốn truyền đạt thông tin gì?
+# 2. Chọn loại biểu đồ phù hợp
+# 3. Vẽ biểu đồ cơ bản
+# 4. Thêm tiêu đề, nhãn, màu sắc
+# 5. Kiểm tra xem biểu đồ có dễ hiểu không
+# 6. Lưu lại nếu cần
+
+# Lưu ý quan trọng:
+# - Biểu đồ phải đơn giản, dễ hiểu
+# - Không thêm quá nhiều thông tin vào một biểu đồ
+# - Luôn nghĩ về người xem
+# - "A picture is worth a thousand words" - Một hình ảnh đáng giá ngàn lời
+
+# Cập nhật: Tháng 3/2026
