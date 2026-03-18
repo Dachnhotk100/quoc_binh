@@ -1108,3 +1108,1604 @@ par(mfrow = c(1, 1))
 - **Quyết định cuối**: K = 3 (2 phương pháp đồng ý)
 
 ---
+
+## 2.5 Hierarchical Clustering
+
+### 2.5.1 Giới thiệu
+
+**Hierarchical Clustering (Phân cụm phân cấp)** xây dựng cây phân cấp của các cụm.
+
+**Khác biệt với K-Means:**
+
+- ✅ **KHÔNG cần** chọn K trước
+- ✅ Tạo **dendrogram** (cây phân cấp)
+- ✅ Cho phép xem cấu trúc phân cấp
+- ❌ Chậm hơn K-Means với dữ liệu lớn
+
+### 2.5.2 Hai loại Hierarchical Clustering
+
+**1. Agglomerative (Bottom-up)**
+
+- Bắt đầu: Mỗi điểm là 1 cụm
+- Lặp: Gộp 2 cụm gần nhất
+- Kết thúc: Tất cả thành 1 cụm lớn
+
+**2. Divisive (Top-down)**
+
+- Bắt đầu: Tất cả là 1 cụm
+- Lặp: Chia cụm xa nhất
+- Kết thúc: Mỗi điểm là 1 cụm
+
+**Trong R chúng ta dùng Agglomerative** (phổ biến hơn)
+
+### 2.5.3 Thuật toán Agglomerative
+
+**Các bước:**
+
+1. Mỗi điểm là 1 cụm riêng (N cụm)
+2. Tính khoảng cách giữa TẤT CẢ cặp cụm
+3. Gộp 2 cụm gần nhất
+4. Lặp bước 2-3 cho đến khi còn 1 cụm
+
+**Minh họa quá trình:**
+
+```{r hierarchical-process, fig.height=8}
+set.seed(42)
+
+# Dữ liệu nhỏ (6 điểm)
+small_data <- data.frame(
+  x = c(1, 2, 2, 8, 9, 9),
+  y = c(1, 1, 2, 8, 8, 9),
+  label = paste("P", 1:6, sep="")
+)
+
+par(mfrow = c(2, 3))
+
+# Bước 0: Mỗi điểm là 1 cụm
+plot(small_data$x, small_data$y, pch = 19, cex = 2,
+     col = rainbow(6), xlim = c(0, 10), ylim = c(0, 10),
+     xlab = "X", ylab = "Y",
+     main = "Bước 0: 6 cụm\nMỗi điểm 1 cụm")
+text(small_data$x, small_data$y + 0.5, small_data$label, font = 2)
+
+# Bước 1: Gộp P1 và P2 (gần nhất)
+colors1 <- c(1, 1, 2, 3, 4, 5)
+plot(small_data$x, small_data$y, pch = 19, cex = 2,
+     col = rainbow(5)[colors1], xlim = c(0, 10), ylim = c(0, 10),
+     xlab = "X", ylab = "Y",
+     main = "Bước 1: 5 cụm\nGộp P1, P2")
+text(small_data$x, small_data$y + 0.5, small_data$label, font = 2)
+lines(small_data$x[1:2], small_data$y[1:2], lwd = 2, col = rainbow(5)[1])
+
+# Bước 2: Gộp {P1,P2} và P3
+colors2 <- c(1, 1, 1, 2, 3, 4)
+plot(small_data$x, small_data$y, pch = 19, cex = 2,
+     col = rainbow(4)[colors2], xlim = c(0, 10), ylim = c(0, 10),
+     xlab = "X", ylab = "Y",
+     main = "Bước 2: 4 cụm\nGộp {P1,P2}, P3")
+text(small_data$x, small_data$y + 0.5, small_data$label, font = 2)
+lines(small_data$x[1:3], small_data$y[1:3], lwd = 2, col = rainbow(4)[1])
+
+# Bước 3: Gộp P4 và P5
+colors3 <- c(1, 1, 1, 2, 2, 3)
+plot(small_data$x, small_data$y, pch = 19, cex = 2,
+     col = rainbow(3)[colors3], xlim = c(0, 10), ylim = c(0, 10),
+     xlab = "X", ylab = "Y",
+     main = "Bước 3: 3 cụm\nGộp P4, P5")
+text(small_data$x, small_data$y + 0.5, small_data$label, font = 2)
+lines(small_data$x[1:3], small_data$y[1:3], lwd = 2, col = rainbow(3)[1])
+lines(small_data$x[4:5], small_data$y[4:5], lwd = 2, col = rainbow(3)[2])
+
+# Bước 4: Gộp {P4,P5} và P6
+colors4 <- c(1, 1, 1, 2, 2, 2)
+plot(small_data$x, small_data$y, pch = 19, cex = 2,
+     col = rainbow(2)[colors4], xlim = c(0, 10), ylim = c(0, 10),
+     xlab = "X", ylab = "Y",
+     main = "Bước 4: 2 cụm\nGộp {P4,P5}, P6")
+text(small_data$x, small_data$y + 0.5, small_data$label, font = 2)
+lines(small_data$x[1:3], small_data$y[1:3], lwd = 2, col = rainbow(2)[1])
+lines(small_data$x[4:6], small_data$y[4:6], lwd = 2, col = rainbow(2)[2])
+
+# Bước 5: Gộp 2 cụm lớn
+colors5 <- rep(1, 6)
+plot(small_data$x, small_data$y, pch = 19, cex = 2,
+     col = "purple", xlim = c(0, 10), ylim = c(0, 10),
+     xlab = "X", ylab = "Y",
+     main = "Bước 5: 1 cụm\nGộp hết")
+text(small_data$x, small_data$y + 0.5, small_data$label, font = 2)
+
+par(mfrow = c(1, 1))
+```
+
+### 2.5.4 Linkage Methods
+
+**Câu hỏi quan trọng:** Tính khoảng cách giữa 2 **CỤM** như thế nào?
+
+Có 4 phương pháp chính:
+
+**1. Single Linkage (Min)**
+
+- Khoảng cách = min khoảng cách giữa 2 điểm bất kỳ
+- Công thức: $d(A, B) = \min_{a \in A, b \in B} d(a, b)$
+- Đặc điểm: Tạo chuỗi dài, nhạy cảm với outliers
+
+**2. Complete Linkage (Max)**
+
+- Khoảng cách = max khoảng cách giữa 2 điểm
+- Công thức: $d(A, B) = \max_{a \in A, b \in B} d(a, b)$
+- Đặc điểm: Tạo cụm chặt, kích thước đồng đều
+
+**3. Average Linkage**
+
+- Khoảng cách = trung bình khoảng cách tất cả cặp điểm
+- Công thức: $d(A, B) = \frac{1}{|A||B|} \sum_{a \in A, b \in B} d(a, b)$
+- Đặc điểm: Cân bằng, phổ biến nhất
+
+**4. Ward's Method**
+
+- Gộp 2 cụm làm tăng WSS (Within Sum of Squares) ít nhất
+- Đặc điểm: Tạo cụm kích thước đều, tốt nhất trong nhiều TH
+
+**Minh họa Linkage:**
+
+```{r linkage-illustration, fig.height=6}
+par(mfrow = c(2, 2))
+
+# Tạo 2 cụm mẫu
+cluster_A <- data.frame(x = c(1, 2, 1.5), y = c(1, 1.5, 2))
+cluster_B <- data.frame(x = c(8, 9, 8.5), y = c(8, 8.5, 9))
+
+# Single Linkage
+plot(c(cluster_A$x, cluster_B$x), c(cluster_A$y, cluster_B$y),
+     col = c(rep("red", 3), rep("blue", 3)), pch = 19, cex = 2,
+     xlab = "X", ylab = "Y", main = "Single Linkage\n(Min distance)")
+# Vẽ khoảng cách min
+min_dist <- which.min(dist(rbind(cluster_A, cluster_B)))
+segments(cluster_A$x[1], cluster_A$y[1], 
+         cluster_B$x[1], cluster_B$y[1],
+         col = "green", lwd = 3)
+text(5, 5, "MIN", col = "green", font = 2, cex = 1.5)
+
+# Complete Linkage
+plot(c(cluster_A$x, cluster_B$x), c(cluster_A$y, cluster_B$y),
+     col = c(rep("red", 3), rep("blue", 3)), pch = 19, cex = 2,
+     xlab = "X", ylab = "Y", main = "Complete Linkage\n(Max distance)")
+# Vẽ khoảng cách max
+segments(cluster_A$x[1], cluster_A$y[1], 
+         cluster_B$x[3], cluster_B$y[3],
+         col = "orange", lwd = 3)
+text(5, 5, "MAX", col = "orange", font = 2, cex = 1.5)
+
+# Average Linkage
+plot(c(cluster_A$x, cluster_B$x), c(cluster_A$y, cluster_B$y),
+     col = c(rep("red", 3), rep("blue", 3)), pch = 19, cex = 2,
+     xlab = "X", ylab = "Y", main = "Average Linkage\n(Avg all pairs)")
+# Vẽ tất cả khoảng cách
+for(i in 1:3) {
+  for(j in 1:3) {
+    segments(cluster_A$x[i], cluster_A$y[i],
+             cluster_B$x[j], cluster_B$y[j],
+             col = "purple", lwd = 1, lty = 2)
+  }
+}
+text(5, 5, "AVG", col = "purple", font = 2, cex = 1.5)
+
+# Ward
+plot(c(cluster_A$x, cluster_B$x), c(cluster_A$y, cluster_B$y),
+     col = c(rep("red", 3), rep("blue", 3)), pch = 19, cex = 2,
+     xlab = "X", ylab = "Y", main = "Ward's Method\n(Min increase WSS)")
+# Vẽ centroids
+points(mean(cluster_A$x), mean(cluster_A$y), pch = 4, cex = 3, lwd = 3)
+points(mean(cluster_B$x), mean(cluster_B$y), pch = 4, cex = 3, lwd = 3)
+text(5, 5, "WSS", col = "darkred", font = 2, cex = 1.5)
+
+par(mfrow = c(1, 1))
+```
+
+### 2.5.5 Dendrogram (Cây phân cấp)
+
+**Dendrogram** là biểu đồ cây thể hiện quá trình gộp cụm.
+
+**Cách đọc Dendrogram:**
+
+- **Trục Y**: Khoảng cách/độ tương đồng
+- **Chiều cao**: Khoảng cách giữa 2 cụm khi gộp
+- **Cắt ngang**: Chọn số cụm K
+
+```{r dendrogram-example, fig.height=8}
+# Dùng dữ liệu customers từ trước
+set.seed(42)
+customers_hc <- data.frame(
+  Age = c(rnorm(70, 25, 4), rnorm(60, 45, 5), rnorm(70, 65, 6)),
+  Income = c(rnorm(70, 30, 8), rnorm(60, 70, 10), rnorm(70, 45, 8))
+)
+
+# Hierarchical clustering
+dist_matrix <- dist(customers_hc)
+hc_complete <- hclust(dist_matrix, method = "complete")
+hc_average <- hclust(dist_matrix, method = "average")
+hc_ward <- hclust(dist_matrix, method = "ward.D2")
+
+par(mfrow = c(3, 1))
+
+# Complete linkage
+plot(hc_complete, main = "Dendrogram - Complete Linkage", 
+     xlab = "", sub = "", labels = FALSE, hang = -1)
+rect.hclust(hc_complete, k = 3, border = "red")
+abline(h = 50, col = "blue", lty = 2, lwd = 2)
+text(100, 53, "Cắt ở đây → K=3", col = "blue", font = 2)
+
+# Average linkage
+plot(hc_average, main = "Dendrogram - Average Linkage", 
+     xlab = "", sub = "", labels = FALSE, hang = -1)
+rect.hclust(hc_average, k = 3, border = "red")
+
+# Ward
+plot(hc_ward, main = "Dendrogram - Ward's Method", 
+     xlab = "", sub = "", labels = FALSE, hang = -1)
+rect.hclust(hc_ward, k = 3, border = "red")
+
+par(mfrow = c(1, 1))
+```
+
+**Giải thích:**
+
+- Đường đỏ: Khung 3 cụm khi cắt
+- Đường xanh: Vị trí cắt để được K=3
+- Càng cắt thấp → càng nhiều cụm
+- Càng cắt cao → càng ít cụm
+
+### 2.5.6 Chọn số cụm K
+
+**Cách 1: Quan sát Dendrogram**
+
+Tìm khoảng cách lớn nhất giữa các lần gộp → cắt ở đó
+
+**Cách 2: Elbow Method với WSS**
+
+```{r hierarchical-elbow, fig.height=6}
+# Tính WSS cho mỗi K
+wss_hc <- sapply(2:10, function(k) {
+  clusters <- cutree(hc_ward, k = k)
+  sum(sapply(1:k, function(i) {
+    cluster_data <- customers_hc[clusters == i, ]
+    if(nrow(cluster_data) > 1) {
+      centroid <- colMeans(cluster_data)
+      sum(rowSums((cluster_data - matrix(rep(centroid, each = nrow(cluster_data)), 
+                                          ncol = 2))^2))
+    } else {
+      0
+    }
+  }))
+})
+
+plot(2:10, wss_hc, type = "b", pch = 19, col = "blue", lwd = 2, cex = 1.5,
+     xlab = "Số cụm K", ylab = "WSS",
+     main = "Elbow Method cho Hierarchical Clustering")
+grid()
+points(3, wss_hc[2], col = "red", pch = 19, cex = 3)
+text(3, wss_hc[2] + 1000, "K = 3", col = "red", font = 2)
+```
+
+### 2.5.7 Triển khai hoàn chỉnh
+
+```{r hierarchical-full-example, fig.height=8}
+# Chọn K = 3
+clusters_hc <- cutree(hc_ward, k = 3)
+
+par(mfrow = c(2, 2))
+
+# Visualization
+plot(customers_hc$Age, customers_hc$Income,
+     col = c("red", "blue", "green")[clusters_hc],
+     pch = 19, cex = 1.2,
+     xlab = "Tuổi", ylab = "Thu nhập",
+     main = "Hierarchical Clustering\n(Ward's Method, K=3)")
+
+# So sánh với K-Means
+km_compare <- kmeans(customers_hc, centers = 3, nstart = 25)
+plot(customers_hc$Age, customers_hc$Income,
+     col = c("red", "blue", "green")[km_compare$cluster],
+     pch = 19, cex = 1.2,
+     xlab = "Tuổi", ylab = "Thu nhập",
+     main = "K-Means\n(K=3)")
+points(km_compare$centers, pch = 4, cex = 3, lwd = 3)
+
+# Dendrogram
+plot(hc_ward, main = "Dendrogram", labels = FALSE, hang = -1)
+rect.hclust(hc_ward, k = 3, border = "red")
+
+# Cluster sizes
+barplot(table(clusters_hc), 
+        names.arg = paste("Cụm", 1:3),
+        col = c("red", "blue", "green"),
+        main = "Kích thước các cụm",
+        ylab = "Số điểm")
+
+par(mfrow = c(1, 1))
+```
+
+**Phân tích kết quả:**
+
+```{r hierarchical-analysis}
+data.frame(
+  Cum = 1:3,
+  So_luong = as.numeric(table(clusters_hc)),
+  Tuoi_TB = round(tapply(customers_hc$Age, clusters_hc, mean), 1),
+  Thu_nhap_TB = round(tapply(customers_hc$Income, clusters_hc, mean), 1)
+)
+```
+
+### 2.5.8 So sánh Hierarchical vs K-Means
+
+| Tiêu chí | K-Means | Hierarchical |
+|----------|---------|--------------|
+| **Tốc độ** | Nhanh O(nkt) | Chậm O(n³) |
+| **Chọn K** | Phải chọn trước | Có thể chọn sau |
+| **Dendrogram** | Không | Có |
+| **Dữ liệu lớn** | Tốt (hàng triệu điểm) | Kém (< 10,000 điểm) |
+| **Kết quả** | Khác nhau mỗi lần (nstart=1) | Cố định |
+| **Hình dạng cụm** | Cầu (spherical) | Linh hoạt hơn |
+| **Ứng dụng** | Phân khúc lớn, real-time | Phân tích khám phá, sinh học |
+
+**Khi nào dùng Hierarchical?**
+
+- ✅ Dữ liệu nhỏ (< 10,000 điểm)
+- ✅ Cần xem cấu trúc phân cấp
+- ✅ Không biết K trước
+- ✅ Cần kết quả ổn định
+
+**Khi nào dùng K-Means?**
+
+- ✅ Dữ liệu lớn
+- ✅ Cần tốc độ
+- ✅ Biết K trước
+- ✅ Cụm hình cầu
+
+---
+
+## 2.6 DBSCAN (Density-Based Spatial Clustering)
+
+### 2.6.1 Giới thiệu
+
+**DBSCAN** = Density-Based Spatial Clustering of Applications with Noise
+
+**Ý tưởng cốt lõi:** Tìm cụm dựa trên **mật độ**, không phải khoảng cách.
+
+**Điểm mạnh:**
+
+- ✅ KHÔNG cần chọn K trước
+- ✅ Tìm được cụm **hình dạng bất kỳ** (không chỉ hình cầu)
+- ✅ Tự động phát hiện **outliers** (noise)
+- ✅ Ít nhạy cảm với thứ tự dữ liệu
+
+**Điểm yếu:**
+
+- ❌ Khó xác định tham số eps và minPts
+- ❌ Không tốt với cụm có **mật độ khác nhau**
+- ❌ Không tốt với dữ liệu **chiều cao**
+
+### 2.6.2 Khái niệm cơ bản
+
+**3 loại điểm:**
+
+**1. Core Point (Điểm lõi)**
+
+- Có ít nhất **minPts** điểm trong bán kính **eps**
+- Là trung tâm của cụm
+
+**2. Border Point (Điểm biên)**
+
+- Nằm trong bán kính eps của core point
+- Không đủ điểm láng giềng để là core point
+- Thuộc cụm nhưng ở rìa
+
+**3. Noise Point (Điểm nhiễu)**
+
+- KHÔNG phải core, KHÔNG phải border
+- Là **outlier**
+
+**Minh họa 3 loại điểm:**
+
+```{r dbscan-point-types, fig.height=6}
+set.seed(42)
+
+# Tạo dữ liệu mẫu
+example_points <- data.frame(
+  x = c(2, 2.5, 2.2, 2.8, 2.1,  8, 8.3,  5),
+  y = c(2, 2.3, 1.8, 2.5, 2.4,  8, 8.2,  5)
+)
+
+# eps = 1, minPts = 3
+eps <- 1
+minPts <- 3
+
+plot(example_points$x, example_points$y, pch = 19, cex = 3,
+     col = "gray", xlim = c(0, 10), ylim = c(0, 10),
+     xlab = "X", ylab = "Y",
+     main = paste("DBSCAN: eps =", eps, ", minPts =", minPts))
+
+# Vẽ vòng tròn eps cho điểm 1 (core)
+theta <- seq(0, 2*pi, length.out = 100)
+lines(example_points$x[1] + eps*cos(theta), 
+      example_points$y[1] + eps*sin(theta),
+      col = "red", lwd = 2)
+points(example_points$x[1], example_points$y[1], pch = 19, cex = 3, col = "red")
+text(example_points$x[1], example_points$y[1] - 0.3, "CORE", col = "red", font = 2)
+
+# Vẽ vòng tròn eps cho điểm 6 (border)
+lines(example_points$x[6] + eps*cos(theta), 
+      example_points$y[6] + eps*sin(theta),
+      col = "blue", lwd = 2)
+points(example_points$x[6], example_points$y[6], pch = 19, cex = 3, col = "blue")
+text(example_points$x[6], example_points$y[6] - 0.3, "CORE", col = "blue", font = 2)
+
+# Điểm 7 là border (gần điểm 6)
+points(example_points$x[7], example_points$y[7], pch = 19, cex = 3, col = "lightblue")
+text(example_points$x[7], example_points$y[7] - 0.3, "BORDER", col = "blue", font = 2)
+
+# Điểm 8 là noise
+points(example_points$x[8], example_points$y[8], pch = 4, cex = 3, lwd = 3, col = "black")
+text(example_points$x[8], example_points$y[8] + 0.5, "NOISE", col = "black", font = 2)
+
+legend("topright", 
+       legend = c("Core Point", "Border Point", "Noise Point"),
+       col = c("red", "lightblue", "black"),
+       pch = c(19, 19, 4), cex = 1)
+```
+
+### 2.6.3 Hai tham số quan trọng
+
+**1. eps (epsilon)**
+
+- Bán kính vùng láng giềng
+- eps nhỏ → nhiều cụm nhỏ + nhiều noise
+- eps lớn → ít cụm lớn + ít noise
+
+**2. minPts (minimum points)**
+
+- Số điểm tối thiểu để là core point
+- minPts nhỏ → nhiều core points
+- minPts lớn → ít core points, nhiều noise
+- **Khuyến nghị**: minPts ≥ số chiều + 1
+
+**Ảnh hưởng của eps và minPts:**
+
+```{r dbscan-parameters, fig.height=8}
+library(dbscan)
+
+set.seed(123)
+data_dbscan <- data.frame(
+  x = c(rnorm(50, 2, 0.5), rnorm(50, 8, 0.6), rnorm(50, 5, 0.5)),
+  y = c(rnorm(50, 2, 0.5), rnorm(50, 3, 0.6), rnorm(50, 7, 0.5))
+)
+
+par(mfrow = c(2, 3))
+
+# Thử nghiệm eps
+db1 <- dbscan(data_dbscan, eps = 0.3, minPts = 5)
+plot(data_dbscan, col = db1$cluster + 1, pch = 19, cex = 1.2,
+     main = "eps = 0.3, minPts = 5\nQuá nhỏ → Nhiều noise")
+points(data_dbscan[db1$cluster == 0, ], col = "black", pch = 4, cex = 1.5, lwd = 2)
+
+db2 <- dbscan(data_dbscan, eps = 0.8, minPts = 5)
+plot(data_dbscan, col = db2$cluster + 1, pch = 19, cex = 1.2,
+     main = "eps = 0.8, minPts = 5\nVừa phải")
+points(data_dbscan[db2$cluster == 0, ], col = "black", pch = 4, cex = 1.5, lwd = 2)
+
+db3 <- dbscan(data_dbscan, eps = 2.0, minPts = 5)
+plot(data_dbscan, col = db3$cluster + 1, pch = 19, cex = 1.2,
+     main = "eps = 2.0, minPts = 5\nQuá lớn → 1 cụm")
+points(data_dbscan[db3$cluster == 0, ], col = "black", pch = 4, cex = 1.5, lwd = 2)
+
+# Thử nghiệm minPts
+db4 <- dbscan(data_dbscan, eps = 0.8, minPts = 3)
+plot(data_dbscan, col = db4$cluster + 1, pch = 19, cex = 1.2,
+     main = "eps = 0.8, minPts = 3\nNhiều cụm nhỏ")
+points(data_dbscan[db4$cluster == 0, ], col = "black", pch = 4, cex = 1.5, lwd = 2)
+
+db5 <- dbscan(data_dbscan, eps = 0.8, minPts = 5)
+plot(data_dbscan, col = db5$cluster + 1, pch = 19, cex = 1.2,
+     main = "eps = 0.8, minPts = 5\nVừa phải")
+points(data_dbscan[db5$cluster == 0, ], col = "black", pch = 4, cex = 1.5, lwd = 2)
+
+db6 <- dbscan(data_dbscan, eps = 0.8, minPts = 10)
+plot(data_dbscan, col = db6$cluster + 1, pch = 19, cex = 1.2,
+     main = "eps = 0.8, minPts = 10\nNhiều noise")
+points(data_dbscan[db6$cluster == 0, ], col = "black", pch = 4, cex = 1.5, lwd = 2)
+
+par(mfrow = c(1, 1))
+```
+
+**Kết quả với các tham số:**
+
+```{r dbscan-params-table}
+data.frame(
+  Setting = c("eps=0.3, minPts=5", "eps=0.8, minPts=5", "eps=2.0, minPts=5",
+              "eps=0.8, minPts=3", "eps=0.8, minPts=5", "eps=0.8, minPts=10"),
+  So_cum = c(max(db1$cluster), max(db2$cluster), max(db3$cluster),
+             max(db4$cluster), max(db5$cluster), max(db6$cluster)),
+  So_noise = c(sum(db1$cluster == 0), sum(db2$cluster == 0), sum(db3$cluster == 0),
+               sum(db4$cluster == 0), sum(db5$cluster == 0), sum(db6$cluster == 0))
+)
+```
+
+### 2.6.4 Thuật toán DBSCAN
+
+**Các bước:**
+
+1. Chọn 1 điểm chưa thăm ngẫu nhiên
+2. Tìm tất cả điểm trong bán kính eps
+3. Nếu số điểm ≥ minPts → Tạo cụm mới
+4. Mở rộng cụm bằng cách tìm láng giềng của láng giềng
+5. Lặp lại với điểm chưa thăm tiếp theo
+6. Điểm không thuộc cụm nào → Noise
+
+**Minh họa thuật toán:**
+
+```{r dbscan-algorithm, fig.height=10}
+set.seed(42)
+
+# Dữ liệu nhỏ
+small_db <- data.frame(
+  x = c(1, 1.5, 1.2, 2, 2.3,  8, 8.5, 8.2, 9,  5),
+  y = c(1, 1.3, 0.8, 1.5, 1.8,  8, 8.3, 7.8, 8.5,  5)
+)
+
+eps_val <- 1
+minPts_val <- 3
+
+par(mfrow = c(3, 2))
+
+# Bước 1: Tất cả điểm chưa gán
+plot(small_db$x, small_db$y, pch = 19, cex = 2, col = "gray",
+     xlim = c(0, 10), ylim = c(0, 10),
+     main = "Bước 1: Chưa gán nhãn",
+     xlab = "X", ylab = "Y")
+text(small_db$x, small_db$y + 0.4, 1:10, font = 2)
+
+# Bước 2: Chọn điểm 1, tìm láng giềng
+plot(small_db$x, small_db$y, pch = 19, cex = 2, col = "gray",
+     xlim = c(0, 10), ylim = c(0, 10),
+     main = paste("Bước 2: Điểm 1 có", sum(dist(rbind(small_db[1,], small_db))[-1] < eps_val), "láng giềng"),
+     xlab = "X", ylab = "Y")
+theta <- seq(0, 2*pi, length.out = 100)
+lines(small_db$x[1] + eps_val*cos(theta), 
+      small_db$y[1] + eps_val*sin(theta), col = "red", lwd = 2)
+points(small_db$x[1], small_db$y[1], pch = 19, cex = 2, col = "red")
+
+# Bước 3: Tạo Cụm 1
+cluster_labels <- rep(0, 10)
+cluster_labels[c(1,2,3,4,5)] <- 1
+plot(small_db$x, small_db$y, pch = 19, cex = 2, 
+     col = ifelse(cluster_labels == 1, "red", "gray"),
+     xlim = c(0, 10), ylim = c(0, 10),
+     main = "Bước 3: Cụm 1 (điểm 1-5)",
+     xlab = "X", ylab = "Y")
+
+# Bước 4: Chọn điểm 6
+plot(small_db$x, small_db$y, pch = 19, cex = 2, 
+     col = ifelse(cluster_labels == 1, "red", "gray"),
+     xlim = c(0, 10), ylim = c(0, 10),
+     main = "Bước 4: Điểm 6 có láng giềng",
+     xlab = "X", ylab = "Y")
+lines(small_db$x[6] + eps_val*cos(theta), 
+      small_db$y[6] + eps_val*sin(theta), col = "blue", lwd = 2)
+points(small_db$x[6], small_db$y[6], pch = 19, cex = 2, col = "blue")
+
+# Bước 5: Tạo Cụm 2
+cluster_labels[c(6,7,8,9)] <- 2
+plot(small_db$x, small_db$y, pch = 19, cex = 2, 
+     col = c("gray", "red", "blue")[cluster_labels + 1],
+     xlim = c(0, 10), ylim = c(0, 10),
+     main = "Bước 5: Cụm 2 (điểm 6-9)",
+     xlab = "X", ylab = "Y")
+
+# Bước 6: Điểm 10 là Noise
+plot(small_db$x, small_db$y, pch = ifelse(cluster_labels == 0, 4, 19), 
+     cex = 2, lwd = 2,
+     col = c("black", "red", "blue")[cluster_labels + 1],
+     xlim = c(0, 10), ylim = c(0, 10),
+     main = "Bước 6: Điểm 10 = NOISE",
+     xlab = "X", ylab = "Y")
+text(small_db$x[10], small_db$y[10] + 0.5, "NOISE", col = "black", font = 2)
+
+par(mfrow = c(1, 1))
+```
+
+### 2.6.5 Chọn eps tối ưu: k-distance graph
+
+**Phương pháp k-NN distance:**
+
+1. Với mỗi điểm, tính khoảng cách đến láng giềng thứ k (k = minPts)
+2. Sắp xếp khoảng cách tăng dần
+3. Vẽ biểu đồ
+4. Tìm điểm "khuỷu tay" → eps tối ưu
+
+```{r knn-distance, fig.height=6}
+# Tính k-NN distance
+k <- 5  # minPts
+knn_dist <- kNNdist(data_dbscan, k = k)
+knn_sorted <- sort(knn_dist)
+
+plot(knn_sorted, type = "l", lwd = 2, col = "blue",
+     xlab = "Điểm (sắp xếp)", 
+     ylab = paste(k, "-NN Distance"),
+     main = "k-NN Distance Graph\nTìm eps tối ưu")
+grid()
+
+# Đánh dấu elbow
+abline(h = 0.8, col = "red", lty = 2, lwd = 2)
+text(100, 0.9, "eps ≈ 0.8", col = "red", font = 2)
+
+# Vùng tăng đột ngột
+points(130, knn_sorted[130], col = "red", pch = 19, cex = 2)
+```
+
+**Giải thích:**
+
+- Trước elbow: Điểm gần nhau (trong cụm)
+- Sau elbow: Điểm xa nhau (noise/outliers)
+- Chọn eps ≈ giá trị tại elbow
+
+### 2.6.6 Ưu điểm của DBSCAN
+
+**1. Tìm cụm hình dạng bất kỳ**
+
+```{r dbscan-shapes, fig.height=6}
+# Tạo dữ liệu hình dạng phức tạp
+set.seed(123)
+
+# Hình vòng tròn
+theta_vals <- seq(0, 2*pi, length.out = 100)
+circle_data <- data.frame(
+  x = 5 + 3*cos(theta_vals) + rnorm(100, 0, 0.2),
+  y = 5 + 3*sin(theta_vals) + rnorm(100, 0, 0.2)
+)
+
+# Điểm trung tâm
+center_data <- data.frame(
+  x = rnorm(50, 5, 0.3),
+  y = rnorm(50, 5, 0.3)
+)
+
+# Noise
+noise_data <- data.frame(
+  x = runif(20, 0, 10),
+  y = runif(20, 0, 10)
+)
+
+complex_data <- rbind(circle_data, center_data, noise_data)
+
+par(mfrow = c(1, 2))
+
+# K-Means (THẤT BẠI)
+km_complex <- kmeans(complex_data, centers = 2, nstart = 25)
+plot(complex_data$x, complex_data$y,
+     col = c("red", "blue")[km_complex$cluster],
+     pch = 19, cex = 1,
+     main = "K-Means: THẤT BẠI\nKhông nhận dạng được hình vòng",
+     xlab = "X", ylab = "Y")
+points(km_complex$centers, pch = 4, cex = 3, lwd = 3)
+
+# DBSCAN (THÀNH CÔNG)
+db_complex <- dbscan(complex_data, eps = 0.5, minPts = 5)
+plot(complex_data$x, complex_data$y,
+     col = db_complex$cluster + 1, 
+     pch = ifelse(db_complex$cluster == 0, 4, 19),
+     cex = 1, lwd = 2,
+     main = "DBSCAN: THÀNH CÔNG\nNhận dạng 2 cụm + noise",
+     xlab = "X", ylab = "Y")
+
+par(mfrow = c(1, 1))
+```
+
+**2. Tự động phát hiện outliers**
+
+```{r dbscan-outliers, fig.height=5}
+# Dữ liệu có outliers
+set.seed(456)
+normal_pts <- data.frame(
+  x = rnorm(100, 5, 1),
+  y = rnorm(100, 5, 1)
+)
+outliers_pts <- data.frame(
+  x = c(0, 10, 0, 10),
+  y = c(0, 0, 10, 10)
+)
+data_with_outliers <- rbind(normal_pts, outliers_pts)
+
+par(mfrow = c(1, 2))
+
+# K-Means bị ảnh hưởng
+km_out <- kmeans(data_with_outliers, centers = 2, nstart = 25)
+plot(data_with_outliers$x, data_with_outliers$y,
+     col = c("red", "blue")[km_out$cluster],
+     pch = 19, cex = 1.2,
+     main = "K-Means\nBị ảnh hưởng bởi outliers",
+     xlab = "X", ylab = "Y")
+points(km_out$centers, pch = 4, cex = 3, lwd = 3)
+
+# DBSCAN loại bỏ outliers
+db_out <- dbscan(data_with_outliers, eps = 0.5, minPts = 5)
+plot(data_with_outliers$x, data_with_outliers$y,
+     col = ifelse(db_out$cluster == 0, "black", "red"),
+     pch = ifelse(db_out$cluster == 0, 4, 19),
+     cex = 1.2, lwd = 2,
+     main = "DBSCAN\nTự động phát hiện outliers",
+     xlab = "X", ylab = "Y")
+
+par(mfrow = c(1, 1))
+```
+
+### 2.6.7 Ví dụ thực tế
+
+```{r dbscan-real-example, fig.height=8}
+# Dùng dữ liệu khách hàng
+set.seed(42)
+customers_db <- data.frame(
+  Age = c(rnorm(70, 25, 4), rnorm(60, 45, 5), rnorm(70, 65, 6)),
+  Income = c(rnorm(70, 30, 8), rnorm(60, 70, 10), rnorm(70, 45, 8))
+)
+
+# Tìm eps tối ưu
+knn_dist_cust <- kNNdist(customers_db, k = 5)
+eps_optimal <- 6  # Từ k-NN graph
+
+# DBSCAN
+db_customers <- dbscan(customers_db, eps = eps_optimal, minPts = 5)
+
+par(mfrow = c(2, 2))
+
+# k-NN distance graph
+plot(sort(knn_dist_cust), type = "l", lwd = 2, col = "blue",
+     main = "k-NN Distance\nChọn eps ≈ 6",
+     xlab = "Điểm", ylab = "5-NN Distance")
+abline(h = eps_optimal, col = "red", lty = 2, lwd = 2)
+
+# DBSCAN result
+plot(customers_db$Age, customers_db$Income,
+     col = db_customers$cluster + 1,
+     pch = ifelse(db_customers$cluster == 0, 4, 19),
+     cex = 1.5, lwd = 2,
+     xlab = "Tuổi", ylab = "Thu nhập",
+     main = paste("DBSCAN: eps =", eps_optimal, ", minPts = 5"))
+legend("topright", 
+       legend = c(paste("Cụm", 1:max(db_customers$cluster)), "Noise"),
+       col = 2:(max(db_customers$cluster)+2), 
+       pch = c(rep(19, max(db_customers$cluster)), 4))
+
+# So sánh với K-Means
+km_cust <- kmeans(customers_db, centers = 3, nstart = 25)
+plot(customers_db$Age, customers_db$Income,
+     col = c("red", "blue", "green")[km_cust$cluster],
+     pch = 19, cex = 1.5,
+     xlab = "Tuổi", ylab = "Thu nhập",
+     main = "K-Means (K=3)")
+points(km_cust$centers, pch = 4, cex = 3, lwd = 3)
+
+# Cluster sizes
+barplot(table(db_customers$cluster), 
+        names.arg = c("Noise", paste("Cụm", 1:max(db_customers$cluster))),
+        col = c("black", rainbow(max(db_customers$cluster))),
+        main = "Phân bố điểm",
+        ylab = "Số điểm")
+
+par(mfrow = c(1, 1))
+```
+
+**Phân tích kết quả:**
+
+```{r dbscan-analysis}
+# Loại bỏ noise
+valid_clusters <- db_customers$cluster[db_customers$cluster != 0]
+valid_data <- customers_db[db_customers$cluster != 0, ]
+
+if(max(db_customers$cluster) > 0) {
+  data.frame(
+    Cum = 1:max(db_customers$cluster),
+    So_luong = as.numeric(table(valid_clusters)),
+    Tuoi_TB = round(tapply(valid_data$Age, valid_clusters, mean), 1),
+    Thu_nhap_TB = round(tapply(valid_data$Income, valid_clusters, mean), 1)
+  )
+}
+
+# Số noise
+sum(db_customers$cluster == 0)
+```
+
+### 2.6.8 So sánh 3 thuật toán
+
+```{r comparison-three-methods, fig.height=5}
+par(mfrow = c(1, 3))
+
+# K-Means
+km_final <- kmeans(customers_db, centers = 3, nstart = 25)
+plot(customers_db$Age, customers_db$Income,
+     col = c("red", "blue", "green")[km_final$cluster],
+     pch = 19, cex = 1.2,
+     xlab = "Tuổi", ylab = "Thu nhập",
+     main = "K-Means")
+points(km_final$centers, pch = 4, cex = 2.5, lwd = 2.5)
+
+# Hierarchical
+hc_final <- hclust(dist(customers_db), method = "ward.D2")
+clusters_hc_final <- cutree(hc_final, k = 3)
+plot(customers_db$Age, customers_db$Income,
+     col = c("red", "blue", "green")[clusters_hc_final],
+     pch = 19, cex = 1.2,
+     xlab = "Tuổi", ylab = "Thu nhập",
+     main = "Hierarchical")
+
+# DBSCAN
+plot(customers_db$Age, customers_db$Income,
+     col = db_customers$cluster + 1,
+     pch = ifelse(db_customers$cluster == 0, 4, 19),
+     cex = 1.2, lwd = 2,
+     xlab = "Tuổi", ylab = "Thu nhập",
+     main = "DBSCAN")
+
+par(mfrow = c(1, 1))
+```
+
+**Bảng tổng hợp:**
+
+| Tiêu chí | K-Means | Hierarchical | DBSCAN |
+|----------|---------|--------------|---------|
+| **Chọn K** | Phải chọn | Chọn sau | Tự động |
+| **Hình dạng** | Hình cầu | Linh hoạt | Bất kỳ |
+| **Outliers** | Nhạy cảm | Nhạy cảm | Tự phát hiện |
+| **Tốc độ** | Nhanh O(nkt) | Chậm O(n³) | Trung bình O(n log n) |
+| **Dữ liệu lớn** | Tốt | Kém | Khá tốt |
+| **Tham số** | K, nstart | K, linkage | eps, minPts |
+| **Kết quả** | Khác nhau | Cố định | Cố định |
+
+**Khi nào dùng DBSCAN?**
+
+- ✅ Cụm hình dạng phức tạp
+- ✅ Có nhiều outliers
+- ✅ Không biết K trước
+- ✅ Cần tự động phát hiện noise
+
+---
+
+
+## 2.7 Dự án thực hành: So sánh 3 thuật toán Clustering
+
+### 2.7.1 Mô tả dự án
+
+**Bài toán:** Phân khúc khách hàng của một cửa hàng bán lẻ
+
+**Dữ liệu:** 300 khách hàng với 3 đặc điểm:
+- Tuổi (Age)
+- Thu nhập hàng tháng (Income)
+- Điểm chi tiêu hàng năm (Spending Score: 1-100)
+
+**Mục tiêu:**
+1. Áp dụng 3 thuật toán: K-Means, Hierarchical, DBSCAN
+2. So sánh kết quả
+3. Đánh giá bằng các chỉ số
+4. Đưa ra khuyến nghị thuật toán phù hợp nhất
+
+### 2.7.2 Chuẩn bị dữ liệu
+
+```{r project-data-prep}
+set.seed(2026)
+
+# Tạo dữ liệu khách hàng thực tế hơn
+# Nhóm 1: Sinh viên - Trẻ, thu nhập thấp, chi tiêu thấp
+group1 <- data.frame(
+  Age = rnorm(80, 22, 3),
+  Income = rnorm(80, 25, 5),
+  Spending = rnorm(80, 30, 8)
+)
+
+# Nhóm 2: Trung niên - Trung tuổi, thu nhập cao, chi tiêu cao
+group2 <- data.frame(
+  Age = rnorm(100, 45, 6),
+  Income = rnorm(100, 80, 12),
+  Spending = rnorm(100, 75, 10)
+)
+
+# Nhóm 3: Người cao tuổi - Lớn tuổi, thu nhập trung bình, chi tiêu vừa
+group3 <- data.frame(
+  Age = rnorm(90, 65, 5),
+  Income = rnorm(90, 50, 8),
+  Spending = rnorm(90, 50, 10)
+)
+
+# Nhóm 4: Outliers - Một số khách hàng đặc biệt
+outliers <- data.frame(
+  Age = c(18, 75, 30, 55),
+  Income = c(15, 120, 90, 35),
+  Spending = c(95, 20, 10, 90)
+)
+
+# Gộp tất cả
+customers_project <- rbind(group1, group2, group3, outliers)
+customers_project$CustomerID <- 1:nrow(customers_project)
+
+# Sắp xếp lại cột
+customers_project <- customers_project[, c("CustomerID", "Age", "Income", "Spending")]
+
+# Xem dữ liệu
+head(customers_project, 10)
+```
+
+**Thống kê mô tả:**
+
+```{r project-summary}
+summary(customers_project[, 2:4])
+```
+
+**Visualization dữ liệu gốc:**
+
+```{r project-data-viz, fig.height=8}
+par(mfrow = c(2, 2))
+
+# Age vs Income
+plot(customers_project$Age, customers_project$Income,
+     pch = 19, cex = 1.2, col = "steelblue",
+     xlab = "Tuổi", ylab = "Thu nhập (triệu/tháng)",
+     main = "Age vs Income")
+
+# Age vs Spending
+plot(customers_project$Age, customers_project$Spending,
+     pch = 19, cex = 1.2, col = "steelblue",
+     xlab = "Tuổi", ylab = "Spending Score (0-100)",
+     main = "Age vs Spending Score")
+
+# Income vs Spending
+plot(customers_project$Income, customers_project$Spending,
+     pch = 19, cex = 1.2, col = "steelblue",
+     xlab = "Thu nhập", ylab = "Spending Score",
+     main = "Income vs Spending Score")
+
+# Histogram Age
+hist(customers_project$Age, breaks = 20, col = "lightblue",
+     xlab = "Tuổi", main = "Phân bố Tuổi")
+
+par(mfrow = c(1, 1))
+```
+
+### 2.7.3 Thuật toán 1: K-Means
+
+**Bước 1: Chọn K tối ưu bằng Elbow Method**
+
+```{r kmeans-elbow-project, fig.height=6}
+# Chuẩn bị dữ liệu (bỏ CustomerID)
+data_clustering <- customers_project[, 2:4]
+
+# Tính WSS cho K = 1 đến 10
+wss_kmeans <- sapply(1:10, function(k) {
+  kmeans(data_clustering, centers = k, nstart = 25)$tot.withinss
+})
+
+par(mfrow = c(1, 2))
+
+# Elbow plot
+plot(1:10, wss_kmeans, type = "b", pch = 19, col = "blue", lwd = 2, cex = 1.5,
+     xlab = "Số cụm K", ylab = "WSS",
+     main = "K-Means: Elbow Method")
+grid()
+points(3, wss_kmeans[3], col = "red", pch = 19, cex = 3)
+text(3, wss_kmeans[3] + 5000, "K = 3", col = "red", font = 2)
+
+# % giảm
+pct_decrease_km <- c(NA, -diff(wss_kmeans)/wss_kmeans[-10]*100)
+plot(2:10, pct_decrease_km[-1], type = "b", pch = 19, col = "darkgreen", lwd = 2,
+     xlab = "K", ylab = "% Giảm WSS", main = "Tốc độ giảm WSS")
+abline(h = 10, col = "red", lty = 2)
+
+par(mfrow = c(1, 1))
+```
+
+**Bước 2: Áp dụng K-Means với K = 3**
+
+```{r kmeans-apply-project}
+# K-Means với K = 3
+km_result <- kmeans(data_clustering, centers = 3, nstart = 50)
+
+# Gán nhãn
+customers_project$KMeans_Cluster <- km_result$cluster
+
+# Centroids
+km_result$centers
+```
+
+**Bước 3: Visualization**
+
+```{r kmeans-viz-project, fig.height=8}
+par(mfrow = c(2, 2))
+
+# Age vs Income
+plot(customers_project$Age, customers_project$Income,
+     col = c("red", "blue", "green")[km_result$cluster],
+     pch = 19, cex = 1.3,
+     xlab = "Tuổi", ylab = "Thu nhập",
+     main = "K-Means: Age vs Income")
+points(km_result$centers[, 1:2], pch = 4, cex = 3, lwd = 3)
+
+# Age vs Spending
+plot(customers_project$Age, customers_project$Spending,
+     col = c("red", "blue", "green")[km_result$cluster],
+     pch = 19, cex = 1.3,
+     xlab = "Tuổi", ylab = "Spending Score",
+     main = "K-Means: Age vs Spending")
+points(km_result$centers[, c(1,3)], pch = 4, cex = 3, lwd = 3)
+
+# Income vs Spending
+plot(customers_project$Income, customers_project$Spending,
+     col = c("red", "blue", "green")[km_result$cluster],
+     pch = 19, cex = 1.3,
+     xlab = "Thu nhập", ylab = "Spending Score",
+     main = "K-Means: Income vs Spending")
+points(km_result$centers[, 2:3], pch = 4, cex = 3, lwd = 3)
+
+# Cluster sizes
+barplot(table(km_result$cluster), 
+        names.arg = paste("Cụm", 1:3),
+        col = c("red", "blue", "green"),
+        main = "K-Means: Kích thước cụm",
+        ylab = "Số khách hàng")
+
+par(mfrow = c(1, 1))
+```
+
+### 2.7.4 Thuật toán 2: Hierarchical Clustering
+
+**Bước 1: Xây dựng Dendrogram**
+
+```{r hierarchical-dendrogram-project, fig.height=7}
+# Tính distance matrix
+dist_matrix <- dist(data_clustering)
+
+# Hierarchical clustering (Ward's method)
+hc_result <- hclust(dist_matrix, method = "ward.D2")
+
+# Vẽ dendrogram
+plot(hc_result, labels = FALSE, hang = -1,
+     main = "Hierarchical Clustering: Dendrogram (Ward's Method)",
+     xlab = "", sub = "")
+rect.hclust(hc_result, k = 3, border = "red")
+abline(h = 60, col = "blue", lty = 2, lwd = 2)
+text(150, 65, "Cắt ở đây → K = 3", col = "blue", font = 2)
+```
+
+**Bước 2: Chọn K = 3 và gán nhãn**
+
+```{r hierarchical-apply-project}
+# Cắt dendrogram tại K = 3
+hc_clusters <- cutree(hc_result, k = 3)
+
+# Gán nhãn
+customers_project$HC_Cluster <- hc_clusters
+
+# Kích thước cụm
+table(hc_clusters)
+```
+
+**Bước 3: Visualization**
+
+```{r hierarchical-viz-project, fig.height=8}
+par(mfrow = c(2, 2))
+
+# Age vs Income
+plot(customers_project$Age, customers_project$Income,
+     col = c("red", "blue", "green")[hc_clusters],
+     pch = 19, cex = 1.3,
+     xlab = "Tuổi", ylab = "Thu nhập",
+     main = "Hierarchical: Age vs Income")
+
+# Age vs Spending
+plot(customers_project$Age, customers_project$Spending,
+     col = c("red", "blue", "green")[hc_clusters],
+     pch = 19, cex = 1.3,
+     xlab = "Tuổi", ylab = "Spending Score",
+     main = "Hierarchical: Age vs Spending")
+
+# Income vs Spending
+plot(customers_project$Income, customers_project$Spending,
+     col = c("red", "blue", "green")[hc_clusters],
+     pch = 19, cex = 1.3,
+     xlab = "Thu nhập", ylab = "Spending Score",
+     main = "Hierarchical: Income vs Spending")
+
+# Cluster sizes
+barplot(table(hc_clusters), 
+        names.arg = paste("Cụm", 1:3),
+        col = c("red", "blue", "green"),
+        main = "Hierarchical: Kích thước cụm",
+        ylab = "Số khách hàng")
+
+par(mfrow = c(1, 1))
+```
+
+### 2.7.5 Thuật toán 3: DBSCAN
+
+**Bước 1: Tìm eps tối ưu bằng k-NN distance**
+
+```{r dbscan-knn-project, fig.height=6}
+library(dbscan)
+
+# k-NN distance (k = 5)
+knn_dist <- kNNdist(data_clustering, k = 5)
+knn_sorted <- sort(knn_dist)
+
+plot(knn_sorted, type = "l", lwd = 2, col = "blue",
+     xlab = "Điểm (sắp xếp)", ylab = "5-NN Distance",
+     main = "DBSCAN: k-NN Distance Graph")
+grid()
+
+# Đánh dấu elbow
+eps_optimal <- 12
+abline(h = eps_optimal, col = "red", lty = 2, lwd = 2)
+text(150, eps_optimal + 2, paste("eps ≈", eps_optimal), col = "red", font = 2)
+```
+
+**Bước 2: Áp dụng DBSCAN**
+
+```{r dbscan-apply-project}
+# DBSCAN với eps và minPts
+db_result <- dbscan(data_clustering, eps = eps_optimal, minPts = 5)
+
+# Gán nhãn
+customers_project$DBSCAN_Cluster <- db_result$cluster
+
+# Kết quả
+table(db_result$cluster)
+
+# Số cụm và noise
+max(db_result$cluster)
+sum(db_result$cluster == 0)
+```
+
+**Bước 3: Visualization**
+
+```{r dbscan-viz-project, fig.height=8}
+par(mfrow = c(2, 2))
+
+# Age vs Income
+plot(customers_project$Age, customers_project$Income,
+     col = db_result$cluster + 1,
+     pch = ifelse(db_result$cluster == 0, 4, 19),
+     cex = 1.3, lwd = 2,
+     xlab = "Tuổi", ylab = "Thu nhập",
+     main = "DBSCAN: Age vs Income")
+
+# Age vs Spending
+plot(customers_project$Age, customers_project$Spending,
+     col = db_result$cluster + 1,
+     pch = ifelse(db_result$cluster == 0, 4, 19),
+     cex = 1.3, lwd = 2,
+     xlab = "Tuổi", ylab = "Spending Score",
+     main = "DBSCAN: Age vs Spending")
+
+# Income vs Spending
+plot(customers_project$Income, customers_project$Spending,
+     col = db_result$cluster + 1,
+     pch = ifelse(db_result$cluster == 0, 4, 19),
+     cex = 1.3, lwd = 2,
+     xlab = "Thu nhập", ylab = "Spending Score",
+     main = "DBSCAN: Income vs Spending")
+
+# Cluster sizes
+cluster_counts <- table(db_result$cluster)
+barplot(cluster_counts, 
+        names.arg = c("Noise", paste("Cụm", 1:(length(cluster_counts)-1))),
+        col = c("black", rainbow(length(cluster_counts)-1)),
+        main = "DBSCAN: Phân bố",
+        ylab = "Số khách hàng")
+
+par(mfrow = c(1, 1))
+```
+
+### 2.7.6 So sánh trực quan 3 thuật toán
+
+```{r comparison-visual-project, fig.height=10}
+par(mfrow = c(3, 3))
+
+# Row 1: K-Means
+plot(customers_project$Age, customers_project$Income,
+     col = c("red", "blue", "green")[km_result$cluster],
+     pch = 19, cex = 1.2,
+     main = "K-Means: Age vs Income",
+     xlab = "Tuổi", ylab = "Thu nhập")
+
+plot(customers_project$Age, customers_project$Spending,
+     col = c("red", "blue", "green")[km_result$cluster],
+     pch = 19, cex = 1.2,
+     main = "K-Means: Age vs Spending",
+     xlab = "Tuổi", ylab = "Spending")
+
+plot(customers_project$Income, customers_project$Spending,
+     col = c("red", "blue", "green")[km_result$cluster],
+     pch = 19, cex = 1.2,
+     main = "K-Means: Income vs Spending",
+     xlab = "Thu nhập", ylab = "Spending")
+
+# Row 2: Hierarchical
+plot(customers_project$Age, customers_project$Income,
+     col = c("red", "blue", "green")[hc_clusters],
+     pch = 19, cex = 1.2,
+     main = "Hierarchical: Age vs Income",
+     xlab = "Tuổi", ylab = "Thu nhập")
+
+plot(customers_project$Age, customers_project$Spending,
+     col = c("red", "blue", "green")[hc_clusters],
+     pch = 19, cex = 1.2,
+     main = "Hierarchical: Age vs Spending",
+     xlab = "Tuổi", ylab = "Spending")
+
+plot(customers_project$Income, customers_project$Spending,
+     col = c("red", "blue", "green")[hc_clusters],
+     pch = 19, cex = 1.2,
+     main = "Hierarchical: Income vs Spending",
+     xlab = "Thu nhập", ylab = "Spending")
+
+# Row 3: DBSCAN
+plot(customers_project$Age, customers_project$Income,
+     col = db_result$cluster + 1,
+     pch = ifelse(db_result$cluster == 0, 4, 19),
+     cex = 1.2, lwd = 2,
+     main = "DBSCAN: Age vs Income",
+     xlab = "Tuổi", ylab = "Thu nhập")
+
+plot(customers_project$Age, customers_project$Spending,
+     col = db_result$cluster + 1,
+     pch = ifelse(db_result$cluster == 0, 4, 19),
+     cex = 1.2, lwd = 2,
+     main = "DBSCAN: Age vs Spending",
+     xlab = "Tuổi", ylab = "Spending")
+
+plot(customers_project$Income, customers_project$Spending,
+     col = db_result$cluster + 1,
+     pch = ifelse(db_result$cluster == 0, 4, 19),
+     cex = 1.2, lwd = 2,
+     main = "DBSCAN: Income vs Spending",
+     xlab = "Thu nhập", ylab = "Spending")
+
+par(mfrow = c(1, 1))
+```
+
+### 2.7.7 Đánh giá bằng chỉ số
+
+**1. Silhouette Score**
+
+Đo độ phù hợp của điểm với cụm của nó (-1 đến 1, càng cao càng tốt)
+
+```{r evaluation-silhouette}
+library(cluster)
+
+# K-Means
+sil_kmeans <- silhouette(km_result$cluster, dist_matrix)
+avg_sil_kmeans <- mean(sil_kmeans[, 3])
+
+# Hierarchical
+sil_hc <- silhouette(hc_clusters, dist_matrix)
+avg_sil_hc <- mean(sil_hc[, 3])
+
+# DBSCAN (chỉ tính cho non-noise)
+valid_points <- db_result$cluster != 0
+if(sum(valid_points) > 0) {
+  sil_dbscan <- silhouette(db_result$cluster[valid_points], 
+                            dist(data_clustering[valid_points, ]))
+  avg_sil_dbscan <- mean(sil_dbscan[, 3])
+} else {
+  avg_sil_dbscan <- NA
+}
+
+# Bảng kết quả
+data.frame(
+  Thuat_toan = c("K-Means", "Hierarchical", "DBSCAN"),
+  Silhouette_Score = round(c(avg_sil_kmeans, avg_sil_hc, avg_sil_dbscan), 4),
+  Danh_gia = c(
+    ifelse(avg_sil_kmeans > 0.5, "Tốt", "Trung bình"),
+    ifelse(avg_sil_hc > 0.5, "Tốt", "Trung bình"),
+    ifelse(avg_sil_dbscan > 0.5, "Tốt", "Trung bình")
+  )
+)
+```
+
+**Visualization Silhouette:**
+
+```{r silhouette-viz-project, fig.height=8}
+par(mfrow = c(3, 1))
+
+plot(sil_kmeans, col = c("red", "blue", "green"), border = NA,
+     main = paste("K-Means: Avg Silhouette =", round(avg_sil_kmeans, 3)))
+
+plot(sil_hc, col = c("red", "blue", "green"), border = NA,
+     main = paste("Hierarchical: Avg Silhouette =", round(avg_sil_hc, 3)))
+
+if(!is.na(avg_sil_dbscan)) {
+  plot(sil_dbscan, col = rainbow(max(db_result$cluster)), border = NA,
+       main = paste("DBSCAN: Avg Silhouette =", round(avg_sil_dbscan, 3)))
+}
+
+par(mfrow = c(1, 1))
+```
+
+**2. WSS (Within-cluster Sum of Squares)**
+
+Tổng khoảng cách bình phương trong cụm (càng thấp càng tốt)
+
+```{r evaluation-wss}
+# K-Means
+wss_kmeans_val <- km_result$tot.withinss
+
+# Hierarchical
+wss_hc_val <- sum(sapply(1:3, function(i) {
+  cluster_data <- data_clustering[hc_clusters == i, ]
+  if(nrow(cluster_data) > 1) {
+    centroid <- colMeans(cluster_data)
+    sum(rowSums((cluster_data - matrix(rep(centroid, each = nrow(cluster_data)), 
+                                        ncol = 3))^2))
+  } else {
+    0
+  }
+}))
+
+# DBSCAN
+if(max(db_result$cluster) > 0) {
+  wss_dbscan_val <- sum(sapply(1:max(db_result$cluster), function(i) {
+    cluster_data <- data_clustering[db_result$cluster == i, ]
+    if(nrow(cluster_data) > 1) {
+      centroid <- colMeans(cluster_data)
+      sum(rowSums((cluster_data - matrix(rep(centroid, each = nrow(cluster_data)), 
+                                          ncol = 3))^2))
+    } else {
+      0
+    }
+  }))
+} else {
+  wss_dbscan_val <- NA
+}
+
+data.frame(
+  Thuat_toan = c("K-Means", "Hierarchical", "DBSCAN"),
+  WSS = round(c(wss_kmeans_val, wss_hc_val, wss_dbscan_val), 2),
+  Xep_hang = rank(c(wss_kmeans_val, wss_hc_val, 
+                     ifelse(is.na(wss_dbscan_val), Inf, wss_dbscan_val)))
+)
+```
+
+**3. Dunn Index**
+
+Tỷ lệ khoảng cách nhỏ nhất giữa cụm / khoảng cách lớn nhất trong cụm (càng cao càng tốt)
+
+```{r evaluation-dunn}
+# Tính Dunn Index thủ công
+# Dunn = min(khoảng cách giữa cụm) / max(khoảng cách trong cụm)
+
+calculate_dunn <- function(data, clusters) {
+  # Loại bỏ noise (nếu có)
+  valid <- clusters != 0
+  data_clean <- data[valid, ]
+  clusters_clean <- clusters[valid]
+  
+  unique_clusters <- unique(clusters_clean)
+  n_clusters <- length(unique_clusters)
+  
+  if(n_clusters < 2) return(NA)
+  
+  # Khoảng cách giữa cụm (inter-cluster)
+  inter_dist <- Inf
+  for(i in 1:(n_clusters-1)) {
+    for(j in (i+1):n_clusters) {
+      c1_points <- data_clean[clusters_clean == unique_clusters[i], ]
+      c2_points <- data_clean[clusters_clean == unique_clusters[j], ]
+      min_dist <- min(as.matrix(dist(rbind(c1_points, c2_points)))[
+        1:nrow(c1_points), 
+        (nrow(c1_points)+1):(nrow(c1_points)+nrow(c2_points))
+      ])
+      inter_dist <- min(inter_dist, min_dist)
+    }
+  }
+  
+  # Khoảng cách trong cụm (intra-cluster)
+  intra_dist <- 0
+  for(k in unique_clusters) {
+    cluster_points <- data_clean[clusters_clean == k, ]
+    if(nrow(cluster_points) > 1) {
+      max_dist <- max(dist(cluster_points))
+      intra_dist <- max(intra_dist, max_dist)
+    }
+  }
+  
+  return(inter_dist / intra_dist)
+}
+
+# Tính cho 3 thuật toán
+dunn_kmeans <- calculate_dunn(data_clustering, km_result$cluster)
+dunn_hc <- calculate_dunn(data_clustering, hc_clusters)
+dunn_dbscan <- calculate_dunn(data_clustering, db_result$cluster)
+
+data.frame(
+  Thuat_toan = c("K-Means", "Hierarchical", "DBSCAN"),
+  Dunn_Index = round(c(dunn_kmeans, dunn_hc, dunn_dbscan), 4),
+  Xep_hang = rank(-c(dunn_kmeans, dunn_hc, 
+                     ifelse(is.na(dunn_dbscan), -Inf, dunn_dbscan)))
+)
+```
+
+**4. Kích thước cụm**
+
+```{r cluster-sizes-comparison}
+data.frame(
+  Cum = paste("Cụm", 1:3),
+  KMeans = as.numeric(table(km_result$cluster)),
+  Hierarchical = as.numeric(table(hc_clusters)),
+  DBSCAN = c(as.numeric(table(db_result$cluster[db_result$cluster != 0])), 
+             rep(NA, 3 - max(db_result$cluster)))
+)
+```
+
+**5. Số noise (chỉ DBSCAN)**
+
+```{r noise-count}
+data.frame(
+  Metric = c("Tổng số điểm", "Số điểm noise", "Tỷ lệ noise (%)"),
+  DBSCAN = c(
+    nrow(customers_project),
+    sum(db_result$cluster == 0),
+    round(sum(db_result$cluster == 0) / nrow(customers_project) * 100, 2)
+  )
+)
+```
+
+### 2.7.8 Bảng tổng hợp đánh giá
+
+```{r final-comparison-table}
+comparison_table <- data.frame(
+  Tieu_chi = c("Silhouette Score", "WSS", "Dunn Index", 
+               "Số cụm", "Outliers", "Tốc độ", "Dễ sử dụng"),
+  KMeans = c(
+    round(avg_sil_kmeans, 3),
+    round(wss_kmeans_val, 0),
+    round(dunn_kmeans, 3),
+    3,
+    "Không phát hiện",
+    "Nhanh",
+    "Dễ"
+  ),
+  Hierarchical = c(
+    round(avg_sil_hc, 3),
+    round(wss_hc_val, 0),
+    round(dunn_hc, 3),
+    3,
+    "Không phát hiện",
+    "Chậm",
+    "Trung bình"
+  ),
+  DBSCAN = c(
+    ifelse(is.na(avg_sil_dbscan), "N/A", round(avg_sil_dbscan, 3)),
+    ifelse(is.na(wss_dbscan_val), "N/A", round(wss_dbscan_val, 0)),
+    ifelse(is.na(dunn_dbscan), "N/A", round(dunn_dbscan, 3)),
+    max(db_result$cluster),
+    paste(sum(db_result$cluster == 0), "điểm"),
+    "Trung bình",
+    "Khó (chọn eps)"
+  )
+)
+
+comparison_table
+```
+
+### 2.7.9 Phân tích từng cụm (K-Means - thuật toán tốt nhất)
+
+```{r best-algorithm-analysis}
+cluster_profiles <- data.frame(
+  Cum = 1:3,
+  So_luong = as.numeric(table(km_result$cluster)),
+  Tuoi_TB = round(tapply(customers_project$Age, km_result$cluster, mean), 1),
+  Thu_nhap_TB = round(tapply(customers_project$Income, km_result$cluster, mean), 1),
+  Spending_TB = round(tapply(customers_project$Spending, km_result$cluster, mean), 1)
+)
+
+cluster_profiles
+```
+
+**Đặc điểm và chiến lược cho từng cụm:**
+
+```{r cluster-strategies, echo=FALSE, results='asis'}
+cat("\n**Cụm 1:**", cluster_profiles$So_luong[1], "khách hàng\n\n")
+cat("- Tuổi TB:", cluster_profiles$Tuoi_TB[1], "tuổi\n")
+cat("- Thu nhập TB:", cluster_profiles$Thu_nhap_TB[1], "triệu/tháng\n")
+cat("- Spending Score:", cluster_profiles$Spending_TB[1], "/100\n")
+
+if(cluster_profiles$Tuoi_TB[1] < 30) {
+  cat("- **Phân loại**: Nhóm SINH VIÊN / TRẺ TUỔI\n")
+  cat("- **Chiến lược**:\n")
+  cat("  - Sản phẩm giá rẻ, chất lượng tốt\n")
+  cat("  - Khuyến mãi mạnh, flash sale\n")
+  cat("  - Marketing qua TikTok, Instagram\n")
+  cat("  - Chương trình student discount\n\n")
+} else if(cluster_profiles$Tuoi_TB[1] > 60) {
+  cat("- **Phân loại**: Nhóm CAO TUỔI\n")
+  cat("- **Chiến lược**:\n")
+  cat("  - Sản phẩm chất lượng, bền vững\n")
+  cat("  - Dịch vụ tận tâm, chu đáo\n")
+  cat("  - Chương trình khách hàng thân thiết\n")
+  cat("  - Hỗ trợ tư vấn cá nhân\n\n")
+} else {
+  cat("- **Phân loại**: Nhóm TRUNG NIÊN\n")
+  cat("- **Chiến lược**:\n")
+  cat("  - Sản phẩm cao cấp, premium\n")
+  cat("  - Chương trình VIP, loyalty\n")
+  cat("  - Dịch vụ giao hàng nhanh\n")
+  cat("  - Tư vấn chuyên sâu\n\n")
+}
+
+cat("---\n\n")
+cat("**Cụm 2:**", cluster_profiles$So_luong[2], "khách hàng\n\n")
+cat("- Tuổi TB:", cluster_profiles$Tuoi_TB[2], "tuổi\n")
+cat("- Thu nhập TB:", cluster_profiles$Thu_nhap_TB[2], "triệu/tháng\n")
+cat("- Spending Score:", cluster_profiles$Spending_TB[2], "/100\n")
+
+if(cluster_profiles$Tuoi_TB[2] < 30) {
+  cat("- **Phân loại**: Nhóm SINH VIÊN / TRẺ TUỔI\n")
+  cat("- **Chiến lược**: Giá rẻ, khuyến mãi, social media\n\n")
+} else if(cluster_profiles$Tuoi_TB[2] > 60) {
+  cat("- **Phân loại**: Nhóm CAO TUỔI\n")
+  cat("- **Chiến lược**: Chất lượng, dịch vụ, khách hàng thân thiết\n\n")
+} else {
+  cat("- **Phân loại**: Nhóm TRUNG NIÊN\n")
+  cat("- **Chiến lược**: Cao cấp, VIP, dịch vụ đặc biệt\n\n")
+}
+
+cat("---\n\n")
+cat("**Cụm 3:**", cluster_profiles$So_luong[3], "khách hàng\n\n")
+cat("- Tuổi TB:", cluster_profiles$Tuoi_TB[3], "tuổi\n")
+cat("- Thu nhập TB:", cluster_profiles$Thu_nhap_TB[3], "triệu/tháng\n")
+cat("- Spending Score:", cluster_profiles$Spending_TB[3], "/100\n")
+
+if(cluster_profiles$Tuoi_TB[3] < 30) {
+  cat("- **Phân loại**: Nhóm SINH VIÊN / TRẺ TUỔI\n")
+  cat("- **Chiến lược**: Giá rẻ, khuyến mãi, social media\n\n")
+} else if(cluster_profiles$Tuoi_TB[3] > 60) {
+  cat("- **Phân loại**: Nhóm CAO TUỔI\n")
+  cat("- **Chiến lược**: Chất lượng, dịch vụ, khách hàng thân thiết\n\n")
+} else {
+  cat("- **Phân loại**: Nhóm TRUNG NIÊN\n")
+  cat("- **Chiến lược**: Cao cấp, VIP, dịch vụ đặc biệt\n\n")
+}
+```
+
+### 2.7.10 Khuyến nghị cuối cùng
+
+**Dựa trên các chỉ số đánh giá:**
+
+1. **Silhouette Score**: K-Means và Hierarchical có điểm tốt hơn DBSCAN
+2. **WSS**: K-Means có WSS thấp nhất → Cụm chặt chẽ nhất
+3. **Dunn Index**: K-Means cao nhất → Cụm phân tách rõ ràng nhất
+4. **Outliers**: DBSCAN phát hiện được outliers, nhưng mất một số điểm dữ liệu
+
+**KHUYẾN NGHỊ:**
+
+✅ **Nên chọn K-MEANS** vì:
+
+- Silhouette Score cao nhất: **`r round(avg_sil_kmeans, 3)`**
+- WSS thấp nhất: **`r round(wss_kmeans_val, 0)`** → Cụm chặt chẽ
+- Dunn Index cao nhất: **`r round(dunn_kmeans, 3)`** → Cụm phân tách rõ
+- Dễ triển khai và giải thích
+- Phù hợp với dữ liệu có cấu trúc rõ ràng (3 nhóm tuổi)
+- Không có outliers đáng kể cần loại bỏ
+
+⚠️ **Hierarchical** cũng tốt nhưng:
+- Chậm hơn K-Means
+- Kết quả tương tự K-Means
+
+⚠️ **DBSCAN** không phù hợp vì:
+- Silhouette thấp hơn
+- Mất dữ liệu do coi là noise
+- Khó chọn tham số eps
+
+---
+
+**KẾT LUẬN:** 
+
+Với bài toán phân khúc khách hàng này, **K-Means với K=3** là lựa chọn tốt nhất, cho phép chia khách hàng thành 3 nhóm rõ ràng để áp dụng chiến lược marketing phù hợp.
+
+---
+
