@@ -1,0 +1,989 @@
+# ==============================================================================
+# BÀI 8: XÂY DỰNG FUNCTION TRONG R
+# ==============================================================================
+# Mục tiêu học tập:
+# - Hiểu khái niệm và vai trò của function trong lập trình R
+# - Nắm vững cú pháp khai báo và định nghĩa function
+# - Phân biệt các loại tham số và giá trị trả về
+# - Xây dựng được các function đơn giản và phức tạp
+# - Áp dụng function vào giải quyết bài toán thực tế
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 3.1 Giới thiệu về Function
+# ------------------------------------------------------------------------------
+
+# 3.1.1 Function là gì?
+#
+# Function (hàm) là một khối mã được đặt tên, có thể được tái sử dụng nhiều 
+# lần trong chương trình. Function giúp:
+# - Tổ chức code: Chia nhỏ chương trình thành các phần có chức năng rõ ràng
+# - Tái sử dụng: Viết một lần, sử dụng nhiều lần
+# - Dễ bảo trì: Sửa lỗi hoặc cải tiến chỉ cần sửa ở một chỗ
+# - Dễ đọc: Code rõ ràng, dễ hiểu hơn
+
+# 3.1.2 Phân loại Function trong R
+#
+# R có hai loại function chính:
+# 1. Built-in Functions: Hàm có sẵn trong R
+#    - mean(), sum(), print(), length(), ...
+# 2. User-defined Functions: Hàm do người dùng tự định nghĩa
+#    - Tạo ra để giải quyết bài toán cụ thể
+
+# Ví dụ Built-in function
+numbers <- c(1, 2, 3, 4, 5)
+mean(numbers)    # 3
+sum(numbers)     # 15
+length(numbers)  # 5
+
+# Ví dụ User-defined function (sẽ học sau)
+calculate_average <- function(x) {
+  return(sum(x) / length(x))
+}
+calculate_average(numbers)  # 3
+
+# ------------------------------------------------------------------------------
+# 3.2 Cú pháp khai báo Function
+# ------------------------------------------------------------------------------
+
+# 3.2.1 Cấu trúc cơ bản
+#
+# function_name <- function(parameter1, parameter2, ...) {
+#   # Thân hàm (function body)
+#   # Các câu lệnh xử lý
+#   
+#   return(result)  # Giá trị trả về (optional)
+# }
+#
+# Các thành phần:
+# - function_name: Tên của hàm (nên đặt tên có ý nghĩa)
+# - parameter1, parameter2: Các tham số đầu vào (có thể có hoặc không)
+# - function body: Khối lệnh thực thi
+# - return(): Trả về kết quả (không bắt buộc)
+
+# 3.2.2 Ví dụ đơn giản
+
+# Function không có tham số
+say_hello <- function() {
+  print("Xin chào!")
+}
+say_hello()  # "Xin chào!"
+
+# Function có một tham số
+say_hello_to <- function(name) {
+  message <- paste("Xin chào", name, "!")
+  print(message)
+}
+say_hello_to("Tùng")  # "Xin chào Tùng !"
+
+# Function có nhiều tham số
+calculate_sum <- function(a, b) {
+  result <- a + b
+  return(result)
+}
+calculate_sum(5, 3)  # 8
+
+# ------------------------------------------------------------------------------
+# 3.3 Tham số (Parameters)
+# ------------------------------------------------------------------------------
+
+# 3.3.1 Tham số bắt buộc
+
+# Tất cả tham số đều bắt buộc
+divide <- function(a, b) {
+  return(a / b)
+}
+divide(10, 2)   # 5
+# divide(10)    # Lỗi! Thiếu tham số b
+
+# 3.3.2 Tham số mặc định (Default Parameters)
+
+# Tham số có giá trị mặc định
+greet <- function(name, greeting = "Xin chào") {
+  message <- paste(greeting, name, "!")
+  return(message)
+}
+greet("Tùng")                    # "Xin chào Tùng !"
+greet("Tùng", "Chào buổi sáng")  # "Chào buổi sáng Tùng !"
+
+# Ví dụ thực tế: Tính lũy thừa
+power <- function(base, exponent = 2) {
+  return(base ^ exponent)
+}
+power(5)      # 25 (5^2)
+power(5, 3)   # 125 (5^3)
+power(2, 10)  # 1024 (2^10)
+
+# 3.3.3 Truyền tham số theo tên
+
+# Truyền tham số theo thứ tự
+calculate_bmi <- function(weight, height) {
+  bmi <- weight / (height ^ 2)
+  return(bmi)
+}
+calculate_bmi(70, 1.75)  # 22.86
+
+# Truyền tham số theo tên (không cần đúng thứ tự)
+calculate_bmi(height = 1.75, weight = 70)  # 22.86
+
+# Kết hợp
+calculate_bmi(70, height = 1.75)  # 22.86
+
+# 3.3.4 Tham số không giới hạn (...)
+
+# Sử dụng ... để nhận số lượng tham số không xác định
+calculate_average <- function(...) {
+  values <- c(...)
+  avg <- sum(values) / length(values)
+  return(avg)
+}
+calculate_average(1, 2, 3)           # 2
+calculate_average(10, 20, 30, 40)    # 25
+calculate_average(5)                 # 5
+
+# Ví dụ kết hợp với tham số cố định
+print_info <- function(title, ...) {
+  cat(title, ":\n")
+  values <- c(...)
+  for (val in values) {
+    cat("-", val, "\n")
+  }
+}
+print_info("Danh sách sinh viên", "Tùng", "Hùng", "Dũng")
+# Output:
+# Danh sách sinh viên :
+# - Tùng 
+# - Hùng 
+# - Dũng
+
+# ------------------------------------------------------------------------------
+# 3.4 Giá trị trả về (Return Value)
+# ------------------------------------------------------------------------------
+
+# 3.4.1 Sử dụng return()
+
+# Trả về giá trị rõ ràng
+square <- function(x) {
+  result <- x * x
+  return(result)
+}
+square(5)  # 25
+
+# 3.4.2 Return ngầm định
+
+# R tự động trả về biểu thức cuối cùng
+square <- function(x) {
+  x * x  # Không cần return
+}
+square(5)  # 25
+
+# Ví dụ phức tạp hơn
+get_grade <- function(score) {
+  if (score >= 85) {
+    "Xuất sắc"
+  } else if (score >= 70) {
+    "Giỏi"
+  } else if (score >= 55) {
+    "Khá"
+  } else if (score >= 40) {
+    "Trung bình"
+  } else {
+    "Yếu"
+  }
+}
+get_grade(88)  # "Xuất sắc"
+get_grade(65)  # "Khá"
+
+# 3.4.3 Trả về nhiều giá trị
+
+# Sử dụng list để trả về nhiều giá trị
+calculate_stats <- function(numbers) {
+  result <- list(
+    mean = mean(numbers),
+    median = median(numbers),
+    sd = sd(numbers),
+    min = min(numbers),
+    max = max(numbers)
+  )
+  return(result)
+}
+
+scores <- c(75, 82, 68, 91, 77, 85, 73)
+stats <- calculate_stats(scores)
+print(stats$mean)    # 78.71
+print(stats$median)  # 77
+print(stats$sd)      # 7.89
+print(stats$min)     # 68
+print(stats$max)     # 91
+
+# Hoặc sử dụng vector
+get_min_max <- function(x) {
+  return(c(min = min(x), max = max(x)))
+}
+result <- get_min_max(c(3, 7, 2, 9, 5))
+print(result)
+# min max 
+#   2   9
+
+# 3.4.4 Return sớm
+
+# Sử dụng return() để thoát sớm
+check_positive <- function(x) {
+  if (x <= 0) {
+    return("Số không dương")
+  }
+  
+  # Code chỉ chạy khi x > 0
+  result <- sqrt(x)
+  return(paste("Căn bậc hai:", result))
+}
+check_positive(-5)  # "Số không dương"
+check_positive(16)  # "Căn bậc hai: 4"
+
+# ------------------------------------------------------------------------------
+# 3.5 Phạm vi biến (Variable Scope)
+# ------------------------------------------------------------------------------
+
+# 3.5.1 Biến cục bộ (Local Variables)
+
+# Biến trong function chỉ tồn tại trong function
+test_function <- function() {
+  local_var <- "Tôi là biến cục bộ"
+  print(local_var)
+}
+test_function()  # "Tôi là biến cục bộ"
+# print(local_var)  # Lỗi! local_var không tồn tại bên ngoài
+
+# 3.5.2 Biến toàn cục (Global Variables)
+
+# Biến toàn cục
+global_var <- 100
+
+use_global <- function() {
+  print(global_var)  # Có thể đọc biến toàn cục
+}
+use_global()  # 100
+
+# Sửa đổi biến toàn cục (không khuyến khích)
+modify_global <- function() {
+  global_var <<- 200  # Sử dụng <<- để gán cho biến toàn cục
+}
+print(global_var)    # 100
+modify_global()
+print(global_var)    # 200
+
+# 3.5.3 Ví dụ về phạm vi biến
+
+x <- 10  # Biến toàn cục
+
+demo_scope <- function() {
+  x <- 20  # Biến cục bộ (khác với biến toàn cục)
+  print(paste("Trong function:", x))
+}
+demo_scope()         # "Trong function: 20"
+print(paste("Ngoài function:", x))  # "Ngoài function: 10"
+# x toàn cục không bị thay đổi
+
+# ------------------------------------------------------------------------------
+# 3.6 Các ví dụ Function thực tế
+# ------------------------------------------------------------------------------
+
+# 3.6.1 Function tính toán thống kê
+
+# Tính hệ số biến thiên (Coefficient of Variation)
+cv <- function(x, na.rm = TRUE) {
+  mean_val <- mean(x, na.rm = na.rm)
+  sd_val <- sd(x, na.rm = na.rm)
+  cv_percent <- (sd_val / mean_val) * 100
+  return(cv_percent)
+}
+scores <- c(75, 80, 85, 90, 95)
+cv(scores)  # 9.43%
+
+# Tính IQR và tìm outliers
+find_outliers <- function(x) {
+  Q1 <- quantile(x, 0.25)
+  Q3 <- quantile(x, 0.75)
+  IQR <- Q3 - Q1
+  
+  lower_bound <- Q1 - 1.5 * IQR
+  upper_bound <- Q3 + 1.5 * IQR
+  
+  outliers <- x[x < lower_bound | x > upper_bound]
+  
+  result <- list(
+    outliers = outliers,
+    lower_bound = lower_bound,
+    upper_bound = upper_bound,
+    n_outliers = length(outliers)
+  )
+  
+  return(result)
+}
+data <- c(23, 25, 27, 29, 31, 33, 35, 100)  # 100 là outlier
+result <- find_outliers(data)
+print(result)
+
+# 3.6.2 Function xử lý dữ liệu
+
+# Chuẩn hóa dữ liệu (Normalization)
+normalize <- function(x) {
+  min_val <- min(x, na.rm = TRUE)
+  max_val <- max(x, na.rm = TRUE)
+  normalized <- (x - min_val) / (max_val - min_val)
+  return(normalized)
+}
+data <- c(10, 20, 30, 40, 50)
+normalize(data)  # 0.00 0.25 0.50 0.75 1.00
+
+# Chuẩn hóa Z-score
+standardize <- function(x) {
+  mean_val <- mean(x, na.rm = TRUE)
+  sd_val <- sd(x, na.rm = TRUE)
+  z_scores <- (x - mean_val) / sd_val
+  return(z_scores)
+}
+scores <- c(60, 70, 80, 90, 100)
+standardize(scores)
+# -1.2649 -0.6325  0.0000  0.6325  1.2649
+
+# 3.6.3 Function xử lý chuỗi
+
+# Viết hoa chữ cái đầu
+capitalize_first <- function(text) {
+  first_char <- substr(text, 1, 1)
+  rest_chars <- substr(text, 2, nchar(text))
+  result <- paste0(toupper(first_char), tolower(rest_chars))
+  return(result)
+}
+capitalize_first("xin chào")  # "Xin chào"
+
+# Đếm số từ trong câu
+count_words <- function(sentence) {
+  words <- strsplit(sentence, " ")[[1]]
+  words <- words[words != ""]  # Loại bỏ khoảng trắng thừa
+  return(length(words))
+}
+count_words("Xin chào các bạn sinh viên")  # 5
+
+# 3.6.4 Function tính toán toán học
+
+# Tính giai thừa
+factorial_custom <- function(n) {
+  if (n < 0) {
+    return("Không tính được giai thừa của số âm")
+  }
+  if (n == 0 || n == 1) {
+    return(1)
+  }
+  result <- 1
+  for (i in 2:n) {
+    result <- result * i
+  }
+  return(result)
+}
+factorial_custom(5)  # 120
+
+# Kiểm tra số nguyên tố
+is_prime <- function(n) {
+  if (n <= 1) {
+    return(FALSE)
+  }
+  if (n == 2) {
+    return(TRUE)
+  }
+  if (n %% 2 == 0) {
+    return(FALSE)
+  }
+  
+  for (i in 3:sqrt(n)) {
+    if (n %% i == 0) {
+      return(FALSE)
+    }
+  }
+  return(TRUE)
+}
+is_prime(17)  # TRUE
+is_prime(15)  # FALSE
+
+# Tính số Fibonacci thứ n
+fibonacci <- function(n) {
+  if (n <= 1) {
+    return(n)
+  }
+  
+  fib <- numeric(n)
+  fib[1] <- 0
+  fib[2] <- 1
+  
+  for (i in 3:n) {
+    fib[i] <- fib[i-1] + fib[i-2]
+  }
+  
+  return(fib[n])
+}
+
+# Dãy 10 số Fibonacci đầu tiên
+sapply(1:10, fibonacci)
+# 0 1 1 2 3 5 8 13 21 34
+
+# 3.6.5 Function xử lý điều kiện và validation
+
+# Kiểm tra độ tuổi hợp lệ
+validate_age <- function(age) {
+  if (!is.numeric(age)) {
+    return("Tuổi phải là số")
+  }
+  if (age < 0) {
+    return("Tuổi không thể âm")
+  }
+  if (age > 150) {
+    return("Tuổi không hợp lý")
+  }
+  return("Hợp lệ")
+}
+validate_age(25)    # "Hợp lệ"
+validate_age(-5)    # "Tuổi không thể âm"
+validate_age("abc") # "Tuổi phải là số"
+
+# Phân loại BMI
+classify_bmi <- function(weight, height) {
+  # Validation
+  if (weight <= 0 || height <= 0) {
+    return("Cân nặng và chiều cao phải dương")
+  }
+  
+  bmi <- weight / (height ^ 2)
+  
+  category <- if (bmi < 18.5) {
+    "Thiếu cân"
+  } else if (bmi < 25) {
+    "Bình thường"
+  } else if (bmi < 30) {
+    "Thừa cân"
+  } else {
+    "Béo phì"
+  }
+  
+  result <- list(
+    bmi = round(bmi, 2),
+    category = category
+  )
+  
+  return(result)
+}
+classify_bmi(70, 1.75)
+# $bmi
+# [1] 22.86
+# $category
+# [1] "Bình thường"
+
+# ------------------------------------------------------------------------------
+# 3.7 Function lồng nhau và Function làm tham số
+# ------------------------------------------------------------------------------
+
+# 3.7.1 Function lồng nhau
+
+# Định nghĩa function bên trong function khác
+outer_function <- function(x) {
+  inner_function <- function(y) {
+    return(y * 2)
+  }
+  
+  result <- inner_function(x) + 10
+  return(result)
+}
+outer_function(5)  # 20 (5*2 + 10)
+
+# 3.7.2 Function làm tham số
+
+# Truyền function như một tham số
+apply_operation <- function(x, y, operation) {
+  return(operation(x, y))
+}
+
+# Định nghĩa các operation
+add <- function(a, b) { a + b }
+multiply <- function(a, b) { a * b }
+power <- function(a, b) { a ^ b }
+
+# Sử dụng
+apply_operation(5, 3, add)       # 8
+apply_operation(5, 3, multiply)  # 15
+apply_operation(5, 3, power)     # 125
+
+# Ví dụ với hàm ẩn danh (anonymous function)
+apply_operation(10, 2, function(a, b) { a - b })  # 8
+
+# 3.7.3 Ứng dụng thực tế với apply family
+
+# Sử dụng function với lapply
+numbers <- list(a = 1:5, b = 6:10, c = 11:15)
+
+# Tính trung bình cho mỗi list
+lapply(numbers, mean)
+# $a: 3
+# $b: 8
+# $c: 13
+
+# Sử dụng function tự định nghĩa
+calculate_range <- function(x) {
+  max(x) - min(x)
+}
+lapply(numbers, calculate_range)
+# $a: 4
+# $b: 4
+# $c: 4
+
+# Sử dụng với sapply (trả về vector)
+sapply(numbers, sum)
+# a  b   c 
+# 15 40 65
+
+# ------------------------------------------------------------------------------
+# 3.8 Best Practices khi viết Function
+# ------------------------------------------------------------------------------
+
+# 3.8.1 Đặt tên function
+
+# ❌ TÊN KHÔNG TỐT
+# f <- function(x) { x * 2 }
+# func1 <- function(x, y) { x + y }
+
+# ✅ TÊN TỐT (động từ + danh từ)
+double_value <- function(x) { x * 2 }
+calculate_sum <- function(x, y) { x + y }
+# get_student_grade <- function(score) { ... }
+# validate_email <- function(email) { ... }
+
+# 3.8.2 Function ngắn gọn và tập trung
+
+# ❌ Function làm quá nhiều việc
+# process_data <- function(data) {
+#   # Đọc dữ liệu
+#   # Làm sạch dữ liệu
+#   # Phân tích dữ liệu
+#   # Vẽ biểu đồ
+#   # Lưu kết quả
+#   # ... quá nhiều logic
+# }
+
+# ✅ Chia nhỏ thành nhiều function
+# read_data <- function(file) { ... }
+# clean_data <- function(data) { ... }
+# analyze_data <- function(data) { ... }
+# plot_results <- function(results) { ... }
+# save_results <- function(results, file) { ... }
+
+# 3.8.3 Sử dụng tham số mặc định hợp lý
+
+# ✅ Tham số mặc định có ý nghĩa
+calculate_statistics <- function(data, 
+                                 na.rm = TRUE,       # Bỏ qua NA
+                                 conf.level = 0.95,  # Mức tin cậy 95%
+                                 digits = 2) {       # Làm tròn 2 chữ số
+  mean_val <- mean(data, na.rm = na.rm)
+  ci <- t.test(data, conf.level = conf.level)$conf.int
+  
+  result <- list(
+    mean = round(mean_val, digits),
+    ci_lower = round(ci[1], digits),
+    ci_upper = round(ci[2], digits)
+  )
+  
+  return(result)
+}
+
+# 3.8.4 Validate input
+
+# ✅ Kiểm tra input trước khi xử lý
+safe_divide <- function(a, b) {
+  # Kiểm tra kiểu dữ liệu
+  if (!is.numeric(a) || !is.numeric(b)) {
+    stop("Cả hai tham số phải là số")
+  }
+  
+  # Kiểm tra chia cho 0
+  if (b == 0) {
+    stop("Không thể chia cho 0")
+  }
+  
+  return(a / b)
+}
+safe_divide(10, 2)    # 5
+# safe_divide(10, 0)  # Lỗi: Không thể chia cho 0
+# safe_divide("a", 2) # Lỗi: Cả hai tham số phải là số
+
+# 3.8.5 Viết documentation
+
+#' Tính chỉ số BMI và phân loại
+#'
+#' @param weight Cân nặng (kg)
+#' @param height Chiều cao (m)
+#' @return List chứa BMI và phân loại
+#' @examples
+#' calculate_bmi(70, 1.75)
+#' calculate_bmi(weight = 65, height = 1.68)
+calculate_bmi <- function(weight, height) {
+  if (weight <= 0 || height <= 0) {
+    stop("Cân nặng và chiều cao phải dương")
+  }
+  
+  bmi <- weight / (height ^ 2)
+  
+  category <- if (bmi < 18.5) {
+    "Thiếu cân"
+  } else if (bmi < 25) {
+    "Bình thường"
+  } else if (bmi < 30) {
+    "Thừa cân"
+  } else {
+    "Béo phì"
+  }
+  
+  return(list(bmi = round(bmi, 2), category = category))
+}
+
+# ------------------------------------------------------------------------------
+# 3.9 Debugging Function
+# ------------------------------------------------------------------------------
+
+# 3.9.1 Sử dụng print() để debug
+
+calculate_discount <- function(price, discount_percent) {
+  print(paste("Price:", price))  # Debug
+  print(paste("Discount:", discount_percent))  # Debug
+  
+  discount_amount <- price * (discount_percent / 100)
+  print(paste("Discount amount:", discount_amount))  # Debug
+  
+  final_price <- price - discount_amount
+  
+  return(final_price)
+}
+calculate_discount(1000, 10)
+
+# 3.9.2 Sử dụng browser()
+
+# Tạm dừng thực thi để kiểm tra
+debug_function <- function(x, y) {
+  result <- x + y
+  # browser()  # Dừng tại đây để debug (bỏ comment để sử dụng)
+  result <- result * 2
+  return(result)
+}
+# Khi chạy, sẽ mở R console để kiểm tra biến
+# debug_function(5, 3)
+
+# 3.9.3 Sử dụng tryCatch() xử lý lỗi
+
+safe_log <- function(x) {
+  result <- tryCatch(
+    {
+      log(x)
+    },
+    error = function(e) {
+      return(paste("Lỗi:", e$message))
+    },
+    warning = function(w) {
+      return(paste("Cảnh báo:", w$message))
+    }
+  )
+  
+  return(result)
+}
+safe_log(10)     # 2.302585
+safe_log(-5)     # "Cảnh báo: NaNs produced"
+safe_log("abc")  # "Lỗi: ..."
+
+# ==============================================================================
+# BÀI TẬP THỰC HÀNH
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Bài tập 1: Function cơ bản
+# ------------------------------------------------------------------------------
+
+# 1. Viết function tính diện tích hình chữ nhật
+# Input: chiều dài, chiều rộng
+# Output: diện tích
+area_rectangle <- function(length, width){
+  area <- length*width
+  return(area)
+}
+
+area_rectangle(5,3)
+
+# 2. Viết function tính chu vi hình tròn
+# Input: bán kính
+# Output: chu vi
+circumference_circle <- function(r){
+ c <- 2 * pi * r
+ return(c)
+}
+
+circumference_circle(5)
+# 3. Viết function chuyển đổi nhiệt độ từ Celsius sang Fahrenheit
+# Công thức: F = C * 9/5 + 32
+c_to_f <- function(c){
+  f <- c * 9/5 +32
+  return(f)
+}
+c_to_f()
+# ------------------------------------------------------------------------------
+# Bài tập 2: Function với validation
+# ------------------------------------------------------------------------------
+
+# 1. Viết function kiểm tra số chẵn/lẻ
+# Input: một số nguyên
+# Output: "Chẵn" hoặc "Lẻ"
+# Validate: input phải là số nguyên
+even_odd <- function(n){
+  
+  if(!is.numeric(n) || n %% 1 != 0){
+    return("Input phải là số nguyên")
+  }
+  
+  if(n %% 2 == 0){
+    return("Chẵn")
+  } else {
+    return("Lẻ")
+  }
+  
+}
+even_odd(6)
+even_odd(7)
+# 2. Viết function tính điểm trung bình
+# Input: vector điểm số
+# Output: điểm trung bình
+# Validate: 
+#   - Điểm phải từ 0 đến 10
+#   - Loại bỏ giá trị NA
+average_score <- function(scores){
+  
+  scores <- scores[!is.na(scores)]
+  
+  if(any(scores < 0 | scores > 10)){
+    stop("Điểm phải từ 0 đến 10")
+  }
+  
+  mean_score <- mean(scores)
+  
+  return(mean_score)
+}
+
+scores <- c(8,7,9,NA,6)
+average_score(scores)
+
+# ------------------------------------------------------------------------------
+# Bài tập 3: Function thống kê
+# ------------------------------------------------------------------------------
+
+# 1. Viết function tính toán tổng quan
+# Input: vector số
+# Output: list(mean, median, sd, min, max, range)
+summary_stats <- function(x){
+  
+  result <- list(
+    mean = mean(x, na.rm = TRUE),
+    median = median(x, na.rm = TRUE),
+    sd = sd(x, na.rm = TRUE),
+    min = min(x, na.rm = TRUE),
+    max = max(x, na.rm = TRUE),
+    range = range(x, na.rm = TRUE)
+  )
+  
+  return(result)
+}
+summary_stats(c(1,2,3,4,5))
+# 2. Viết function tính hoán vị P(n, r)
+# Công thức: P(n,r) = n! / (n-r)!
+permutation <- function(n,r){
+  
+  result <- factorial(n) / factorial(n-r)
+  
+  return(result)
+}
+
+# 3. Viết function tính tổ hợp C(n, r)
+# Công thức: C(n,r) = n! / (r! * (n-r)!)
+combination <- function(n,r){
+  
+  result <- factorial(n) / (factorial(r) * factorial(n-r))
+  
+  return(result)
+}
+# ------------------------------------------------------------------------------
+# Bài tập 4: Function nâng cao
+# ------------------------------------------------------------------------------
+
+# 1. Viết function tìm các số nguyên tố từ 1 đến n
+# Input: n
+# Output: vector các số nguyên tố
+prime_numbers <- function(n){
+  
+  primes <- c()
+  
+  for(i in 2:n){
+    
+    is_prime <- TRUE
+    
+    for(j in 2:sqrt(i)){
+      if(i %% j == 0){
+        is_prime <- FALSE
+        break
+      }
+    }
+    
+    if(is_prime){
+      primes <- c(primes,i)
+    }
+    
+  }
+  
+  return(primes)
+}
+prime_numbers(20)
+# 2. Viết function tạo tam giác Pascal với n hàng
+# Gợi ý: Sử dụng tổ hợp C(n, k)
+pascal_triangle <- function(n){
+  
+  for(i in 0:(n-1)){
+    
+    for(j in 0:i){
+      
+      cat(choose(i,j)," ")
+      
+    }
+    
+    cat("\n")
+    
+  }
+  
+}
+pascal_triangle(5)
+# 3. Viết function phân loại sinh viên dựa vào điểm
+# Input: điểm số
+# Output: xếp loại (Xuất sắc, Giỏi, Khá, TB, Yếu)
+# Kèm theo GPA scale 4.0
+student_classification <- function(score){
+  
+  if(score >= 9){
+    return(list(rank="Xuất sắc", GPA=4.0))
+  }
+  
+  else if(score >= 8){
+    return(list(rank="Giỏi", GPA=3.5))
+  }
+  
+  else if(score >= 7){
+    return(list(rank="Khá", GPA=3.0))
+  }
+  
+  else if(score >= 5){
+    return(list(rank="Trung bình", GPA=2.0))
+  }
+  
+  else{
+    return(list(rank="Yếu", GPA=1.0))
+  }
+  
+}
+# ------------------------------------------------------------------------------
+# Bài tập 5: Ứng dụng thực tế
+# ------------------------------------------------------------------------------
+
+# 1. Viết function tính lương ròng
+# Input: lương cơ bản, phụ cấp, số ngày làm việc, số giờ tăng ca
+# Output: lương ròng sau thuế
+net_salary <- function(base_salary, allowance, work_days, overtime_hours){
+  
+  hourly <- base_salary / (22 * 8)
+  
+  overtime_pay <- overtime_hours * hourly * 1.5
+  
+  gross <- base_salary + allowance + overtime_pay
+  
+  tax <- gross * 0.1
+  
+  net <- gross - tax
+  
+  return(net)
+}
+# 2. Viết function chuẩn hóa điểm thi
+# Input: vector điểm thô
+# Output: vector điểm chuẩn hóa (0-100)
+# Công thức: (điểm - min) / (max - min) * 100
+normalize_scores <- function(scores){
+  
+  min_val <- min(scores)
+  max_val <- max(scores)
+  
+  normalized <- (scores - min_val)/(max_val - min_val) * 100
+  
+  return(normalized)
+}
+# 3. Viết function phân tích dữ liệu sinh viên
+# Input: data frame (tên, tuổi, điểm)
+# Output: thống kê mô tả đầy đủ
+student_analysis <- function(df){
+  
+  result <- list(
+    total_students = nrow(df),
+    avg_age = mean(df$age),
+    avg_score = mean(df$score),
+    max_score = max(df$score),
+    min_score = min(df$score)
+  )
+  
+  return(result)
+}
+
+
+
+
+
+
+students <- data.frame(
+  name=c("An","Bình","Chi"),
+  age=c(20,21,19),
+  score=c(8,7.5,9)
+)
+
+student_analysis(students)
+# ==============================================================================
+# TÀI LIỆU THAM KHẢO
+# ==============================================================================
+
+# 1. R Documentation - Functions: ?function
+# 2. Advanced R - Functions: https://adv-r.hadley.nz/functions.html
+# 3. R for Data Science - Functions: https://r4ds.had.co.nz/functions.html
+# 4. Quick-R - Creating Functions: https://www.statmethods.net/management/userfunctions.html
+
+# ==============================================================================
+# TỔNG KẾT
+# ==============================================================================
+
+# Những điểm cần nhớ:
+# 1. ✅ Function giúp code dễ đọc, dễ bảo trì và tái sử dụng
+# 2. ✅ Sử dụng tên function có ý nghĩa (động từ + danh từ)
+# 3. ✅ Tham số mặc định giúp function linh hoạt hơn
+# 4. ✅ Luôn validate input trước khi xử lý
+# 5. ✅ Function nên ngắn gọn, tập trung vào một nhiệm vụ
+# 6. ✅ Viết documentation cho function phức tạp
+# 7. ✅ Sử dụng return() rõ ràng hoặc để R tự return biểu thức cuối
+
+# Quy trình viết function tốt:
+# 1. Xác định mục đích: Function này làm gì?
+# 2. Thiết kế input/output: Cần tham số gì? Trả về gì?
+# 3. Viết code đơn giản: Viết logic cơ bản trước
+# 4. Thêm validation: Kiểm tra input hợp lệ
+# 5. Test kỹ lưỡng: Thử với nhiều trường hợp khác nhau
+# 6. Refactor: Cải thiện code, thêm tính năng
+# 7. Document: Viết hướng dẫn sử dụng
+
+# Lưu ý quan trọng:
+# - Function là nền tảng của lập trình R
+# - Thực hành viết function thường xuyên để thành thạo
+# - Đọc code của người khác để học cách viết function tốt
+# - Các function trong bài học tiếp theo (Thống kê) đều sử dụng các nguyên tắc này
